@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+
+{% block title %}Track Report - SafeAlert{% endblock %}
+
+{% block extra_css %}
+<style>
+    .track-container {
+        max-width: 500px;
+        margin: 4rem auto;
+        padding: 2rem;
+    }
+
+    .track-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .track-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .track-header svg {
+        width: 60px;
+        height: 60px;
+        color: #ff6b35;
+        margin-bottom: 1rem;
+    }
+
+    .track-input {
+        position: relative;
+    }
+
+    .track-input input {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-align: center;
+    }
+
+    .track-input input:focus {
+        outline: none;
+        border-color: #ff6b35;
+    }
+
+    .track-btn {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, #ff6b35 0%, #f43f5e 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .track-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(255,107,53,0.4);
+    }
+
+    .result-card {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: #f8fafc;
+        border-radius: 12px;
+        display: none;
+    }
+
+    .result-card.show {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .result-item:last-child {
+        border-bottom: none;
+    }
+
+    .result-label {
+        color: #64748b;
+    }
+
+    .result-value {
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .status-REPORTED { background: #dbeafe; color: #2563eb; }
+    .status-VERIFIED { background: #dcfce7; color: #16a34a; }
+    .status-DISPATCHED { background: #fef3c7; color: #d97706; }
+    .status-EN_ROUTE { background: #e0e7ff; color: #4f46e5; }
+    .status-ON_SCENE { background: #e0e7ff; color: #4f46e5; }
+    .status-RESOLVED { background: #d1fae5; color: #059669; }
+    .status-CLOSED { background: #f1f5f9; color: #475569; }
+
+    .error-msg {
+        text-align: center;
+        color: #dc2626;
+        padding: 1rem;
+        background: #fef2f2;
+        border-radius: 8px;
+        margin-top: 1rem;
+        display: none;
+    }
+
+    .error-msg.show {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="track-container">
+    <div class="track-card">
+        <div class="track-header">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <h2>Track Your Report</h2>
+            <p class="text-muted">Enter your tracking code to check the status of your anonymous report.</p>
+        </div>
+        
+        <div class="track-input">
+            <input type="text" id="tracking-code" placeholder="SA-2024-XXXXXX" maxlength="15">
+        </div>
+        
+        <button class="track-btn" onclick="trackReport()">Track Report</button>
+        
+        <div class="error-msg" id="error-msg">
+            Report not found. Please check your tracking code.
+        </div>
+        
+        <div class="result-card" id="result-card">
+            <h5 class="mb-3">Report Status</h5>
+            <div class="result-item">
+                <span class="result-label">Tracking Code</span>
+                <span class="result-value" id="result-code">-</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Status</span>
+                <span class="result-value">
+                    <span class="status-badge" id="result-status">-</span>
+                </span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Category</span>
+                <span class="result-value" id="result-category">-</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Severity</span>
+                <span class="result-value" id="result-severity">-</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Reported</span>
+                <span class="result-value" id="result-created">-</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Last Updated</span>
+                <span class="result-value" id="result-updated">-</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('tracking-code').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        trackReport();
+    }
+});
+
+function trackReport() {
+    const code = document.getElementById('tracking-code').value.trim().toUpperCase();
+    
+    if (!code) {
+        showError('Please enter a tracking code.');
+        return;
+    }
+    
+    fetch(`/api/incidents/track/${code}/`)
+        .then(res => {
+            if (!res.ok) throw new Error('Not found');
+            return res.json();
+        })
+        .then(data => {
+            hideError();
+            showResult(data);
+        })
+        .catch(err => {
+            hideResult();
+            showError('Report not found. Please check your tracking code.');
+        });
+}
+
+function showResult(data) {
+    document.getElementById('result-code').textContent = data.tracking_code;
+    
+    const statusBadge = document.getElementById('result-status');
+    statusBadge.textContent = data.status.replace('_', ' ');
+    statusBadge.className = `status-badge status-${data.status}`;
+    
+    document.getElementById('result-category').textContent = data.category || '-';
+    document.getElementById('result-severity').textContent = data.severity;
+    document.getElementById('result-created').textContent = new Date(data.created_at).toLocaleString();
+    document.getElementById('result-updated').textContent = new Date(data.updated_at).toLocaleString();
+    
+    document.getElementById('result-card').classList.add('show');
+}
+
+function hideResult() {
+    document.getElementById('result-card').classList.remove('show');
+}
+
+function showError(msg) {
+    const errorEl = document.getElementById('error-msg');
+    errorEl.textContent = msg;
+    errorEl.classList.add('show');
+}
+
+function hideError() {
+    document.getElementById('error-msg').classList.remove('show');
+}
+</script>
+{% endblock %}
+

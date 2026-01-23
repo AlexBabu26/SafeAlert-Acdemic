@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}New Report - SafeAlert{% endblock %}
+
+{% block content %}
+<div class="sa-page-header">
+    <div>
+        <h1 class="sa-page-title"><i class="bi bi-plus-circle me-2"></i>New Report</h1>
+        <p class="sa-page-subtitle">Share the key details so responders can act quickly.</p>
+    </div>
+    <div class="sa-page-actions">
+        <a href="/reports" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-9 col-xl-8">
+        <div class="card shadow">
+            <div class="card-body p-4 p-md-5">
+                <form id="report-form">
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
+                        <select class="form-select" id="category" required>
+                            <option value="">Select a category...</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title (Optional)</label>
+                        <input type="text" class="form-control" id="title" placeholder="Brief title for this incident">
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="description" rows="6" required placeholder="Provide detailed information about the incident..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="location_text" class="form-label">Location</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="location_text" placeholder="Location of the incident">
+                            <button type="button" class="btn btn-outline-secondary" id="refresh-location-btn" title="Refresh location from IP">
+                                <i class="bi bi-geo-alt"></i>
+                            </button>
+                        </div>
+                        <small class="form-text text-muted">
+                            <span id="location-status">Auto-detecting location...</span>
+                        </small>
+                        <!-- Hidden fields for coordinates -->
+                        <input type="hidden" id="latitude" value="">
+                        <input type="hidden" id="longitude" value="">
+                        <div id="coordinates-display" class="mt-2 small text-muted" style="display: none;">
+                            <i class="bi bi-pin-map"></i> Coordinates: <span id="coords-text"></span>
+                            <a href="#" id="map-preview-link" target="_blank" class="ms-2"><i class="bi bi-box-arrow-up-right"></i> View on Map</a>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="attachment" class="form-label">Attachment (Optional)</label>
+                        <input type="file" class="form-control" id="attachment" accept="image/*,.pdf,.doc,.docx">
+                        <small class="form-text text-muted">Supported formats: Images, PDF, DOC, DOCX</small>
+                    </div>
+                    <div class="d-flex gap-2 justify-content-end flex-wrap">
+                        <a href="/reports" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4">Submit Report</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/user/report_new.js"></script>
+{% endblock %}
+

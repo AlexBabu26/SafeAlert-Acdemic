@@ -1,0 +1,5 @@
+"""
+API blueprints for SafeAlert
+"""
+
+

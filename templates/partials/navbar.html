@@ -1,0 +1,91 @@
+<nav class="navbar navbar-expand-lg sa-navbar" data-bs-theme="dark">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <i class="bi bi-shield-exclamation"></i> SafeAlert
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Home</a>
+                </li>
+                <li class="nav-item" id="nav-user-dashboard" style="display: none;">
+                    <a class="nav-link" href="/reports">My Reports</a>
+                </li>
+                <li class="nav-item" id="nav-new-report" style="display: none;">
+                    <a class="nav-link" href="/report/new">New Report</a>
+                </li>
+                <li class="nav-item" id="nav-admin-dashboard" style="display: none;">
+                    <a class="nav-link" href="/admin/dashboard">Admin Dashboard</a>
+                </li>
+                <li class="nav-item" id="nav-admin-analytics" style="display: none;">
+                    <a class="nav-link" href="/admin/analytics">Analytics</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item" id="nav-login" style="display: none;">
+                    <a class="nav-link" href="/login">Login</a>
+                </li>
+                <li class="nav-item" id="nav-register" style="display: none;">
+                    <a class="nav-link" href="/register">Register</a>
+                </li>
+                <li class="nav-item dropdown" id="nav-user-menu" style="display: none;">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                        <span id="navbar-username">User</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" id="logout-link">Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<script>
+    // Update navbar based on auth state
+    document.addEventListener('DOMContentLoaded', function() {
+        const token = localStorage.getItem('access_token');
+        const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+        const isAdmin = userInfo.is_staff === true;
+        
+        if (token) {
+            document.getElementById('nav-login').style.display = 'none';
+            document.getElementById('nav-register').style.display = 'none';
+            document.getElementById('nav-user-menu').style.display = 'block';
+            document.getElementById('navbar-username').textContent = userInfo.username || 'User';
+            
+            if (isAdmin) {
+                // Admin: show admin links only
+                document.getElementById('nav-user-dashboard').style.display = 'none';
+                document.getElementById('nav-new-report').style.display = 'none';
+                document.getElementById('nav-admin-dashboard').style.display = 'block';
+                document.getElementById('nav-admin-analytics').style.display = 'block';
+            } else {
+                // Regular user: show user links only
+                document.getElementById('nav-user-dashboard').style.display = 'block';
+                document.getElementById('nav-new-report').style.display = 'block';
+                document.getElementById('nav-admin-dashboard').style.display = 'none';
+                document.getElementById('nav-admin-analytics').style.display = 'none';
+            }
+        } else {
+            document.getElementById('nav-login').style.display = 'block';
+            document.getElementById('nav-register').style.display = 'block';
+            document.getElementById('nav-user-menu').style.display = 'none';
+            document.getElementById('nav-user-dashboard').style.display = 'none';
+            document.getElementById('nav-new-report').style.display = 'none';
+            document.getElementById('nav-admin-dashboard').style.display = 'none';
+            document.getElementById('nav-admin-analytics').style.display = 'none';
+        }
+        
+        document.getElementById('logout-link')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            localStorage.removeItem('user_info');
+            window.location.href = '/';
+        });
+    });
+</script>
+

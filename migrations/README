@@ -1,0 +1,8 @@
+Generic single-database configuration with an async dbapi.
+
+Alembic will:
+- Load the application's models in order to autogenerate migrations
+- Run all migrations in a single transaction
+- Run migrations in "online" mode
+
+

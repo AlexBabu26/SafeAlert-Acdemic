@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Report Detail - SafeAlert{% endblock %}
+
+{% block content %}
+<div class="sa-page-header">
+    <div>
+        <h1 class="sa-page-title"><i class="bi bi-file-text me-2"></i>Report Detail</h1>
+        <p class="sa-page-subtitle">View status, attachments, and conversation updates.</p>
+    </div>
+    <div class="sa-page-actions">
+        <a href="/reports" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Reports
+        </a>
+    </div>
+</div>
+
+<div id="report-detail" class="card shadow mb-4">
+    <div class="card-body p-4">
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="messages-section" class="card shadow">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-chat-dots"></i> Messages & Updates</h5>
+    </div>
+    <div class="card-body p-4" id="messages-list">
+        <div class="text-center py-3">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/user/report_detail.js"></script>
+{% endblock %}
+

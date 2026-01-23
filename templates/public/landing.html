@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}SafeAlert - Emergency Reporting Platform{% endblock %}
+
+{% block content %}
+<section class="sa-hero">
+    <div class="sa-hero-inner">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <span class="sa-icon-badge">
+                        <i class="bi bi-shield-exclamation fs-3"></i>
+                    </span>
+                    <span class="badge bg-light text-dark">Emergency reporting platform</span>
+                </div>
+                <h1 class="display-4 mb-3">SafeAlert</h1>
+                <p class="lead mb-4">
+                    Report incidents fast, track status updates, and communicate securely — all in one place.
+                </p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="/register" class="btn btn-light btn-lg">
+                        <i class="bi bi-person-plus"></i> Get Started
+                    </a>
+                    <a href="/login" class="btn btn-outline-light btn-lg">
+                        <i class="bi bi-box-arrow-in-right"></i> Login
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-start gap-3">
+                            <span class="sa-icon-badge" style="background: rgba(37, 99, 235, 0.12); border-color: rgba(37, 99, 235, 0.16);">
+                                <i class="bi bi-lightning-charge-fill text-primary fs-4"></i>
+                            </span>
+                            <div>
+                                <h5 class="mb-1">Fast reporting</h5>
+                                <p class="mb-0 text-muted">Submit in seconds with predefined categories and attachments.</p>
+                            </div>
+                        </div>
+                        <hr class="my-4">
+                        <div class="d-flex align-items-start gap-3">
+                            <span class="sa-icon-badge" style="background: rgba(34, 197, 94, 0.12); border-color: rgba(34, 197, 94, 0.16);">
+                                <i class="bi bi-shield-check text-success fs-4"></i>
+                            </span>
+                            <div>
+                                <h5 class="mb-1">Secure & private</h5>
+                                <p class="mb-0 text-muted">Your reports stay private to you and authorized administrators.</p>
+                            </div>
+                        </div>
+                        <hr class="my-4">
+                        <div class="d-flex align-items-start gap-3">
+                            <span class="sa-icon-badge" style="background: rgba(6, 182, 212, 0.12); border-color: rgba(6, 182, 212, 0.16);">
+                                <i class="bi bi-graph-up text-info fs-4"></i>
+                            </span>
+                            <div>
+                                <h5 class="mb-1">Track progress</h5>
+                                <p class="mb-0 text-muted">Follow updates from pending → verified → resolved.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container-xxl">
+    <div class="row g-4 mt-1">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-geo-alt text-primary"></i>
+                        <h6 class="mb-0">Better context</h6>
+                    </div>
+                    <p class="mb-0 text-muted">Add location details and attachments to help responders act faster.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-chat-dots text-primary"></i>
+                        <h6 class="mb-0">Two-way updates</h6>
+                    </div>
+                    <p class="mb-0 text-muted">Message threads keep communication clear and auditable.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-bar-chart text-primary"></i>
+                        <h6 class="mb-0">Admin insights</h6>
+                    </div>
+                    <p class="mb-0 text-muted">Analytics help identify trends and improve response planning.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

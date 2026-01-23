@@ -1,0 +1,508 @@
+{% extends 'base.html' %}
+
+{% block title %}Responder Dashboard - SafeAlert{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+        --accent-color: #ff6b35;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --card-bg: rgba(255, 255, 255, 0.95);
+    }
+
+    .responder-header {
+        background: var(--primary-gradient);
+        padding: 2rem 0;
+        color: white;
+        margin-bottom: 2rem;
+    }
+
+    .duty-toggle {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.5rem;
+        background: rgba(255,255,255,0.1);
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+    }
+
+    .duty-toggle .toggle-switch {
+        width: 60px;
+        height: 32px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 16px;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .duty-toggle .toggle-switch.active {
+        background: var(--success-color);
+    }
+
+    .duty-toggle .toggle-switch::after {
+        content: '';
+        position: absolute;
+        width: 26px;
+        height: 26px;
+        background: white;
+        border-radius: 50%;
+        top: 3px;
+        left: 3px;
+        transition: all 0.3s ease;
+    }
+
+    .duty-toggle .toggle-switch.active::after {
+        left: calc(100% - 29px);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: var(--card-bg);
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border-left: 4px solid var(--accent-color);
+    }
+
+    .stat-card h3 {
+        font-size: 0.9rem;
+        color: #64748b;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-card .value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .assignment-card {
+        background: var(--card-bg);
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        margin-bottom: 1rem;
+        border-left: 4px solid transparent;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .assignment-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+
+    .assignment-card.priority-1 { border-left-color: var(--danger-color); }
+    .assignment-card.priority-2 { border-left-color: var(--warning-color); }
+    .assignment-card.priority-3 { border-left-color: var(--success-color); }
+
+    .severity-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .severity-CRITICAL { background: #fef2f2; color: #dc2626; }
+    .severity-HIGH { background: #fff7ed; color: #ea580c; }
+    .severity-MEDIUM { background: #fefce8; color: #ca8a04; }
+    .severity-LOW { background: #f0fdf4; color: #16a34a; }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-ASSIGNED { background: #dbeafe; color: #2563eb; }
+    .status-ACCEPTED { background: #dcfce7; color: #16a34a; }
+    .status-EN_ROUTE { background: #fef3c7; color: #d97706; }
+    .status-ON_SCENE { background: #e0e7ff; color: #4f46e5; }
+
+    .assignment-meta {
+        display: flex;
+        gap: 1.5rem;
+        margin-top: 1rem;
+        color: #64748b;
+        font-size: 0.875rem;
+    }
+
+    .assignment-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .action-btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .action-btn.primary {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    .action-btn.primary:hover {
+        background: #e55a28;
+        transform: scale(1.02);
+    }
+
+    .action-btn.secondary {
+        background: #e2e8f0;
+        color: #475569;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #64748b;
+    }
+
+    .empty-state svg {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .quick-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="responder-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h1 class="h3 mb-1">Responder Dashboard</h1>
+                <p class="mb-0 opacity-75" id="department-name">Loading...</p>
+            </div>
+            <div class="duty-toggle">
+                <span>Duty Status</span>
+                <div class="toggle-switch" id="duty-toggle" onclick="toggleDuty()"></div>
+                <span id="duty-status">Off Duty</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Active Assignments</h3>
+            <div class="value" id="active-count">-</div>
+        </div>
+        <div class="stat-card">
+            <h3>Completed Today</h3>
+            <div class="value" id="completed-today">-</div>
+        </div>
+        <div class="stat-card">
+            <h3>Avg Response Time</h3>
+            <div class="value" id="avg-response">-</div>
+            <small class="text-muted">minutes</small>
+        </div>
+    </div>
+
+    <!-- Assignments List -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 mb-0">My Assignments</h2>
+        <div class="btn-group">
+            <button class="btn btn-sm btn-outline-primary active" onclick="filterAssignments('active')">Active</button>
+            <button class="btn btn-sm btn-outline-primary" onclick="filterAssignments('all')">All</button>
+        </div>
+    </div>
+
+    <div id="assignments-container">
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+const API_BASE = '/api/responder';
+let socket = null;
+let currentFilter = 'active';
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboard();
+    loadAssignments();
+    initSocketIO();
+});
+
+function loadDashboard() {
+    apiRequest(`${API_BASE}/dashboard/`)
+        .then(data => {
+            document.getElementById('department-name').textContent = data.user.department_name || 'No department assigned';
+            document.getElementById('active-count').textContent = data.my_stats.active_assignments;
+            document.getElementById('completed-today').textContent = data.my_stats.completed_today;
+            document.getElementById('avg-response').textContent = data.department_stats.avg_response_time_minutes || '-';
+            
+            // Update duty toggle
+            const toggle = document.getElementById('duty-toggle');
+            const status = document.getElementById('duty-status');
+            if (data.user.is_on_duty) {
+                toggle.classList.add('active');
+                status.textContent = 'On Duty';
+            } else {
+                toggle.classList.remove('active');
+                status.textContent = 'Off Duty';
+            }
+        })
+        .catch(err => {
+            console.error('Error loading dashboard:', err);
+            showToast('Error loading dashboard', 'error');
+        });
+}
+
+function loadAssignments() {
+    const statusParam = currentFilter === 'active' ? '' : '&status=';
+    const mineOnly = 'mine_only=true';
+    
+    apiRequest(`${API_BASE}/assignments/?${mineOnly}`)
+        .then(data => {
+            renderAssignments(data.results || []);
+        })
+        .catch(err => {
+            console.error('Error loading assignments:', err);
+            document.getElementById('assignments-container').innerHTML = `
+                <div class="empty-state">
+                    <p>Error loading assignments</p>
+                </div>
+            `;
+        });
+}
+
+function renderAssignments(assignments) {
+    const container = document.getElementById('assignments-container');
+    
+    if (!assignments.length) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <h3>No Active Assignments</h3>
+                <p>You don't have any active assignments at the moment.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = assignments.map(assignment => `
+        <div class="assignment-card priority-${assignment.priority_rank}" onclick="viewAssignment(${assignment.id})">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="severity-badge severity-${assignment.incident_severity}">${assignment.incident_severity}</span>
+                    <span class="status-badge status-${assignment.status}">${assignment.status.replace('_', ' ')}</span>
+                </div>
+                <span class="text-muted small">Priority #${assignment.priority_rank}</span>
+            </div>
+            <h5 class="mt-3 mb-2">${assignment.incident_title || assignment.incident_category || 'Incident'}</h5>
+            <p class="text-muted mb-0">${assignment.incident_location || 'Location not specified'}</p>
+            <div class="assignment-meta">
+                <span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
+                    </svg>
+                    ${assignment.distance_km ? assignment.distance_km.toFixed(1) + ' km' : '-'}
+                </span>
+                <span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+                    </svg>
+                    ${formatTime(assignment.assigned_at)}
+                </span>
+            </div>
+            <div class="quick-actions" onclick="event.stopPropagation()">
+                ${getQuickActions(assignment)}
+            </div>
+        </div>
+    `).join('');
+}
+
+function getQuickActions(assignment) {
+    switch (assignment.status) {
+        case 'ASSIGNED':
+            return `
+                <button class="action-btn primary" onclick="acceptAssignment(${assignment.id})">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/>
+                    </svg>
+                    Accept
+                </button>
+            `;
+        case 'ACCEPTED':
+            return `
+                <button class="action-btn primary" onclick="updateStatus(${assignment.id}, 'EN_ROUTE')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1z"/>
+                    </svg>
+                    En Route
+                </button>
+            `;
+        case 'EN_ROUTE':
+            return `
+                <button class="action-btn primary" onclick="updateStatus(${assignment.id}, 'ON_SCENE')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
+                    </svg>
+                    Arrived
+                </button>
+            `;
+        case 'ON_SCENE':
+            return `
+                <button class="action-btn primary" onclick="updateStatus(${assignment.id}, 'COMPLETED')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/>
+                    </svg>
+                    Complete
+                </button>
+            `;
+        default:
+            return '';
+    }
+}
+
+function toggleDuty() {
+    const toggle = document.getElementById('duty-toggle');
+    const isOnDuty = !toggle.classList.contains('active');
+    
+    apiRequest(`${API_BASE}/duty/`, {
+        method: 'POST',
+        body: JSON.stringify({ is_on_duty: isOnDuty })
+    })
+    .then(data => {
+        if (data.is_on_duty) {
+            toggle.classList.add('active');
+            document.getElementById('duty-status').textContent = 'On Duty';
+            showToast('You are now on duty', 'success');
+        } else {
+            toggle.classList.remove('active');
+            document.getElementById('duty-status').textContent = 'Off Duty';
+            showToast('You are now off duty', 'info');
+        }
+    })
+    .catch(err => {
+        showToast('Error updating duty status', 'error');
+    });
+}
+
+function acceptAssignment(id) {
+    apiRequest(`${API_BASE}/assignments/${id}/accept/`, { method: 'POST' })
+        .then(data => {
+            showToast('Assignment accepted!', 'success');
+            loadAssignments();
+            loadDashboard();
+        })
+        .catch(err => {
+            showToast('Error accepting assignment', 'error');
+        });
+}
+
+function updateStatus(id, status) {
+    apiRequest(`${API_BASE}/assignments/${id}/status/`, {
+        method: 'POST',
+        body: JSON.stringify({ status: status })
+    })
+    .then(data => {
+        showToast(`Status updated to ${status.replace('_', ' ')}`, 'success');
+        loadAssignments();
+        loadDashboard();
+    })
+    .catch(err => {
+        showToast('Error updating status', 'error');
+    });
+}
+
+function viewAssignment(id) {
+    window.location.href = `/responder/assignments/${id}`;
+}
+
+function filterAssignments(filter) {
+    currentFilter = filter;
+    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.toLowerCase() === filter);
+    });
+    loadAssignments();
+}
+
+function formatTime(isoString) {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diff = (now - date) / 1000 / 60; // minutes
+    
+    if (diff < 60) return `${Math.round(diff)}m ago`;
+    if (diff < 1440) return `${Math.round(diff / 60)}h ago`;
+    return date.toLocaleDateString();
+}
+
+function initSocketIO() {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+    
+    socket = io();
+    
+    socket.on('connect', () => {
+        socket.emit('authenticate', { token: token });
+    });
+    
+    socket.on('authenticated', (data) => {
+        console.log('WebSocket authenticated:', data);
+    });
+    
+    socket.on('new_assignment', (data) => {
+        showToast('New assignment received!', 'info');
+        loadAssignments();
+        loadDashboard();
+    });
+    
+    socket.on('incident_updated', (data) => {
+        loadAssignments();
+    });
+}
+</script>
+{% endblock %}
+

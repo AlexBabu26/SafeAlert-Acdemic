@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Analytics - SafeAlert{% endblock %}
+
+{% block content %}
+<div class="sa-page-header">
+    <div>
+        <h1 class="sa-page-title"><i class="bi bi-graph-up me-2"></i>Analytics & Trends</h1>
+        <p class="sa-page-subtitle">Snapshot metrics and incident trends over time.</p>
+    </div>
+    <div class="sa-page-actions">
+        <a href="/admin/dashboard" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body p-4">
+                <h5 class="card-title text-primary">Total Incidents</h5>
+                <h2 id="total-incidents" class="text-primary">-</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body p-4">
+                <h5 class="card-title text-warning">Pending</h5>
+                <h2 id="pending-count" class="text-warning">-</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body p-4">
+                <h5 class="card-title text-info">Verified</h5>
+                <h2 id="verified-count" class="text-info">-</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body p-4">
+                <h5 class="card-title text-success">Resolved</h5>
+                <h2 id="resolved-count" class="text-success">-</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Incidents by Status</h5>
+            </div>
+            <div class="card-body p-4">
+                <canvas id="status-chart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Incidents by Category</h5>
+            </div>
+            <div class="card-body p-4">
+                <canvas id="category-chart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Incidents Over Time</h5>
+        <select class="form-select form-select-sm" id="timeseries-days" style="width: auto;">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+        </select>
+    </div>
+    <div class="card-body p-4">
+        <canvas id="timeseries-chart"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/static/js/adminpanel/analytics.js"></script>
+{% endblock %}
+
