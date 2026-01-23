@@ -4,7 +4,7 @@ Flask application factory for SafeAlert
 from flask import Flask
 from pathlib import Path
 from app.config import Config
-from app.extensions import db, jwt, cors, socketio
+from app.extensions import db, jwt, cors, socketio, migrate
 
 # Get the base directory (project root)
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,6 +24,7 @@ def create_app(config_class=Config):
     jwt.init_app(app)
     cors.init_app(app, origins=app.config['CORS_ORIGINS'], supports_credentials=app.config['CORS_SUPPORTS_CREDENTIALS'])
     socketio.init_app(app)
+    migrate.init_app(app, db)
     
     # Configure JWT to handle integer identities
     # Flask-JWT-Extended expects string identities, so we convert
