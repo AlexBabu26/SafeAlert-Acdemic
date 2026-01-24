@@ -277,12 +277,81 @@ main {
 
 /* Auth pages */
 .sa-auth-wrap {
-    padding-top: 1rem;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
 }
 
 .sa-auth-card .card-header {
     background: transparent;
     border-bottom: 1px solid var(--sa-border);
+}
+
+/* Dark mode auth card styling */
+@media (prefers-color-scheme: dark) {
+    .sa-auth-card {
+        background: rgba(15, 23, 42, 0.7) !important;
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(148, 163, 184, 0.15) !important;
+    }
+
+    .sa-auth-card .card-body {
+        color: #e2e8f0;
+    }
+
+    .sa-auth-card h4,
+    .sa-auth-card h5 {
+        color: #f8fafc;
+    }
+
+    .sa-auth-card .form-label {
+        color: #cbd5e1 !important;
+        font-weight: 600;
+    }
+
+    .sa-auth-card .form-control,
+    .sa-auth-card .form-select {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        color: #f1f5f9;
+    }
+
+    .sa-auth-card .form-control::placeholder {
+        color: #64748b;
+    }
+
+    .sa-auth-card .form-control:focus,
+    .sa-auth-card .form-select:focus {
+        background: rgba(15, 23, 42, 0.8);
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        color: #f1f5f9;
+    }
+
+    .sa-auth-card .form-text {
+        color: #94a3b8;
+    }
+
+    .sa-auth-card .text-muted {
+        color: #94a3b8 !important;
+    }
+
+    .sa-auth-card a {
+        color: #60a5fa;
+    }
+
+    .sa-auth-card a:hover {
+        color: #93c5fd;
+    }
+
+    .sa-auth-card .btn-primary {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        border: none;
+    }
+
+    .sa-auth-card .btn-primary:hover {
+        background: linear-gradient(135deg, #1d4ed8, #2563eb);
+        box-shadow: 0 8px 25px rgba(37, 99, 235, 0.35);
+    }
 }
 
 /* Toast + loader */

@@ -4,6 +4,59 @@
 
 {% block extra_css %}
 <style>
+    /* Register page specific styles */
+    .sa-auth-card {
+        background: rgba(255, 255, 255, 0.03) !important;
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .sa-auth-card .card-body {
+        color: #e2e8f0;
+    }
+
+    .sa-auth-card h4 {
+        color: #f8fafc;
+    }
+
+    .sa-auth-card .text-muted {
+        color: #94a3b8 !important;
+    }
+
+    /* Form labels - ensure visibility */
+    .sa-auth-card .form-label {
+        color: #cbd5e1 !important;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    /* Form inputs */
+    .sa-auth-card .form-control,
+    .sa-auth-card .form-select {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        color: #f1f5f9;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+    }
+
+    .sa-auth-card .form-control::placeholder {
+        color: #64748b;
+    }
+
+    .sa-auth-card .form-control:focus,
+    .sa-auth-card .form-select:focus {
+        background: rgba(15, 23, 42, 0.8);
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        color: #f1f5f9;
+    }
+
+    .sa-auth-card .form-text {
+        color: #94a3b8;
+    }
+
+    /* Role selector */
     .role-selector {
         display: flex;
         gap: 1rem;
@@ -13,21 +66,23 @@
     .role-card {
         flex: 1;
         padding: 1.25rem;
-        border: 2px solid #e2e8f0;
+        border: 2px solid rgba(148, 163, 184, 0.3);
         border-radius: 12px;
         cursor: pointer;
         transition: all 0.3s ease;
         text-align: center;
+        background: rgba(15, 23, 42, 0.4);
     }
     
     .role-card:hover {
         border-color: #ff6b35;
-        background: #fff9f7;
+        background: rgba(255, 107, 53, 0.1);
     }
     
     .role-card.selected {
         border-color: #ff6b35;
-        background: linear-gradient(135deg, #fff5f2 0%, #fff9f7 100%);
+        background: rgba(255, 107, 53, 0.15);
+        box-shadow: 0 0 20px rgba(255, 107, 53, 0.2);
     }
     
     .role-card i {
@@ -37,41 +92,142 @@
     }
     
     .role-card.citizen i { color: #10b981; }
-    .role-card.responder i { color: #2563eb; }
+    .role-card.responder i { color: #3b82f6; }
     
     .role-card h5 {
         margin-bottom: 0.25rem;
         font-weight: 600;
+        color: #f1f5f9;
     }
     
     .role-card p {
         font-size: 0.85rem;
-        color: #64748b;
+        color: #94a3b8;
         margin-bottom: 0;
     }
+
+    .role-card.selected h5 {
+        color: #fff;
+    }
     
+    /* Responder fields section */
     .responder-fields {
         display: none;
-        background: #f8fafc;
-        padding: 1rem;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 1.25rem;
         border-radius: 12px;
-        margin-bottom: 1rem;
+        margin-bottom: 1.25rem;
+        border: 1px solid #e2e8f0;
     }
     
     .responder-fields.show {
         display: block;
+        animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .responder-fields h6 {
+        color: #1e293b !important;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    /* Override form styles inside responder-fields for light background */
+    .responder-fields .form-label {
+        color: #334155 !important;
+        font-weight: 600;
+    }
+
+    .responder-fields .form-control,
+    .responder-fields .form-select {
+        background: #475569;
+        border: 1px solid #64748b;
+        color: #f1f5f9;
+    }
+
+    .responder-fields .form-control::placeholder {
+        color: #94a3b8;
+    }
+
+    .responder-fields .form-control:focus,
+    .responder-fields .form-select:focus {
+        background: #475569;
+        border-color: #ff6b35;
+        box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.25);
+        color: #f1f5f9;
     }
     
+    /* Pending notice */
     .pending-notice {
         background: linear-gradient(135deg, #fef3c7, #fde68a);
         border-radius: 12px;
-        padding: 1rem;
-        margin-bottom: 1rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.25rem;
         display: none;
+        border: 1px solid #fbbf24;
     }
     
     .pending-notice.show {
         display: block;
+        animation: slideDown 0.3s ease;
+    }
+
+    .pending-notice strong {
+        color: #92400e;
+        font-size: 0.95rem;
+    }
+
+    .pending-notice p {
+        color: #78350f !important;
+        margin-bottom: 0;
+    }
+
+    .pending-notice .text-muted {
+        color: #92400e !important;
+    }
+
+    /* Submit button */
+    .sa-auth-card .btn-primary {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        border: none;
+        padding: 0.875rem 1.5rem;
+        font-weight: 600;
+        font-size: 1rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .sa-auth-card .btn-primary:hover {
+        background: linear-gradient(135deg, #1d4ed8, #2563eb);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(37, 99, 235, 0.35);
+    }
+
+    /* Footer link */
+    .sa-auth-card a {
+        color: #3b82f6;
+        font-weight: 500;
+    }
+
+    .sa-auth-card a:hover {
+        color: #60a5fa;
+    }
+
+    /* Required field indicator */
+    .text-danger {
+        color: #f87171 !important;
     }
 </style>
 {% endblock %}
