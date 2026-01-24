@@ -229,6 +229,54 @@
     .text-danger {
         color: #f87171 !important;
     }
+
+    /* Location selection buttons */
+    .location-options .btn {
+        border-radius: 8px;
+        font-size: 0.85rem;
+        padding: 0.5rem 0.875rem;
+    }
+
+    .location-options .btn-outline-primary {
+        border-color: #3b82f6;
+        color: #3b82f6;
+    }
+
+    .location-options .btn-outline-primary:hover {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .location-options .btn-outline-secondary {
+        border-color: #94a3b8;
+        color: #cbd5e1;
+    }
+
+    .location-options .btn-outline-secondary:hover {
+        background: #475569;
+        border-color: #475569;
+        color: #f1f5f9;
+    }
+
+    /* Spinning icon animation */
+    .spin {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    /* Location status messages */
+    #location-status {
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    #location-status i {
+        margin-right: 0.25rem;
+    }
 </style>
 {% endblock %}
 
@@ -310,6 +358,25 @@
                                 <label for="badge_number" class="form-label">Badge/ID Number</label>
                                 <input type="text" class="form-control" id="badge_number" placeholder="e.g., FD-12345">
                             </div>
+                            <div class="mb-3">
+                                <label class="form-label">Base Location <span class="text-danger">*</span></label>
+                                <small class="text-muted d-block mb-2">Used for optimal incident allocation</small>
+                                <div class="location-options mb-2 d-flex gap-2 flex-wrap">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="detectLocation()">
+                                        <i class="bi bi-geo-alt-fill"></i> Detect My Location
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="useDepartmentLocation()">
+                                        <i class="bi bi-building"></i> Use Department Location
+                                    </button>
+                                </div>
+                                <select class="form-select mb-2" id="area_select" onchange="selectArea(this.value)">
+                                    <option value="">Or select a predefined area...</option>
+                                </select>
+                                <input type="text" class="form-control mb-2" id="home_address" placeholder="Address (optional)">
+                                <input type="hidden" id="home_latitude">
+                                <input type="hidden" id="home_longitude">
+                                <div id="location-status" class="form-text"></div>
+                            </div>
                         </div>
                         
                         <div class="mb-3">
@@ -339,9 +406,11 @@
 {% block extra_js %}
 <script>
 let selectedRole = 'citizen';
+let departmentsData = [];
 
 document.addEventListener('DOMContentLoaded', function() {
     loadDepartments();
+    loadAreas();
 });
 
 function selectRole(role) {
@@ -371,15 +440,92 @@ function loadDepartments() {
     fetch('/api/auth/departments/')
         .then(res => res.json())
         .then(departments => {
+            departmentsData = departments;
             const select = document.getElementById('department_id');
             departments.forEach(dept => {
                 const option = document.createElement('option');
                 option.value = dept.id;
                 option.textContent = `${dept.name} (${dept.type})`;
+                option.dataset.lat = dept.headquarters_lat;
+                option.dataset.lng = dept.headquarters_lng;
+                option.dataset.address = dept.address;
                 select.appendChild(option);
             });
         })
         .catch(err => console.error('Error loading departments:', err));
+}
+
+function loadAreas() {
+    fetch('/api/auth/areas/')
+        .then(res => res.json())
+        .then(areas => {
+            const select = document.getElementById('area_select');
+            areas.forEach(area => {
+                const option = document.createElement('option');
+                option.value = JSON.stringify({lat: area.latitude, lng: area.longitude, name: area.name});
+                option.textContent = area.name;
+                select.appendChild(option);
+            });
+        })
+        .catch(err => console.error('Error loading areas:', err));
+}
+
+function detectLocation() {
+    const status = document.getElementById('location-status');
+    
+    if (!navigator.geolocation) {
+        status.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Geolocation not supported by your browser</span>';
+        return;
+    }
+    
+    status.innerHTML = '<span class="text-info"><i class="bi bi-arrow-repeat spin"></i> Detecting location...</span>';
+    
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            document.getElementById('home_latitude').value = position.coords.latitude;
+            document.getElementById('home_longitude').value = position.coords.longitude;
+            status.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> Location detected successfully!</span>';
+        },
+        (error) => {
+            status.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Could not detect location. Please select an area or use department location.</span>';
+            console.error('Geolocation error:', error);
+        }
+    );
+}
+
+function useDepartmentLocation() {
+    const deptId = document.getElementById('department_id').value;
+    const status = document.getElementById('location-status');
+    
+    if (!deptId) {
+        showToast('Please select a department first', 'warning');
+        return;
+    }
+    
+    const dept = departmentsData.find(d => d.id == deptId);
+    if (dept && dept.headquarters_lat) {
+        document.getElementById('home_latitude').value = dept.headquarters_lat;
+        document.getElementById('home_longitude').value = dept.headquarters_lng;
+        document.getElementById('home_address').value = dept.address || dept.name;
+        status.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill"></i> Using ${dept.name} location</span>`;
+    } else {
+        status.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Department location not available</span>';
+    }
+}
+
+function selectArea(value) {
+    const status = document.getElementById('location-status');
+    
+    if (!value) {
+        status.innerHTML = '';
+        return;
+    }
+    
+    const area = JSON.parse(value);
+    document.getElementById('home_latitude').value = area.lat;
+    document.getElementById('home_longitude').value = area.lng;
+    document.getElementById('home_address').value = area.name;
+    status.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill"></i> Selected area: ${area.name}</span>`;
 }
 
 document.getElementById('register-form').addEventListener('submit', async function(e) {
@@ -422,6 +568,20 @@ document.getElementById('register-form').addEventListener('submit', async functi
     if (role === 'responder') {
         data.department_id = parseInt(document.getElementById('department_id').value);
         data.badge_number = document.getElementById('badge_number').value;
+        
+        // Add location data
+        const latitude = document.getElementById('home_latitude').value;
+        const longitude = document.getElementById('home_longitude').value;
+        const address = document.getElementById('home_address').value;
+        
+        if (latitude && longitude) {
+            data.home_latitude = parseFloat(latitude);
+            data.home_longitude = parseFloat(longitude);
+        }
+        
+        if (address) {
+            data.home_address = address;
+        }
     }
     
     try {

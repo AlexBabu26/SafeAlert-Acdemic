@@ -22,6 +22,11 @@ class UserRegistrationSchema(Schema):
     department_id = fields.Int(required=False, allow_none=True)
     badge_number = fields.Str(required=False, allow_none=True)
     
+    # Location fields (for responders - important for allocation)
+    home_address = fields.Str(required=False, allow_none=True)
+    home_latitude = fields.Float(required=False, allow_none=True)
+    home_longitude = fields.Float(required=False, allow_none=True)
+    
     @validates_schema
     def validate_passwords(self, data, **kwargs):
         """Validate that passwords match"""

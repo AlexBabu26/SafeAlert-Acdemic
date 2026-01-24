@@ -51,11 +51,23 @@ def register():
         department_id=data.get('department_id') if role == 'responder' else None,
         badge_number=data.get('badge_number') if role == 'responder' else None,
         is_active=True,  # Citizens are active by default, responders need admin approval
+        # Location fields
+        home_address=data.get('home_address'),
+        home_latitude=data.get('home_latitude'),
+        home_longitude=data.get('home_longitude'),
     )
     
     # Responders need admin approval - set inactive by default
     if role == 'responder':
         user.is_active = False  # Responders need admin approval
+        
+        # If responder didn't provide location, use department headquarters as default
+        if not user.home_latitude and data.get('department_id'):
+            department = Department.query.get(data.get('department_id'))
+            if department:
+                user.home_latitude = department.headquarters_lat
+                user.home_longitude = department.headquarters_lng
+                user.home_address = department.address or f"{department.name} Location"
     
     user.set_password(data['password'])
     
@@ -89,8 +101,68 @@ def list_departments_for_registration():
     return jsonify([{
         'id': d.id,
         'name': d.name,
-        'type': d.type
+        'type': d.type,
+        'headquarters_lat': float(d.headquarters_lat) if d.headquarters_lat else None,
+        'headquarters_lng': float(d.headquarters_lng) if d.headquarters_lng else None,
+        'address': d.address,
     } for d in departments]), 200
+
+
+@bp.route('/areas/', methods=['GET'])
+def list_predefined_areas():
+    """Get predefined areas for location selection during registration"""
+    # Predefined areas for UAE/Sharjah region
+    areas = [
+        {
+            'id': 'sharjah_downtown',
+            'name': 'Sharjah Downtown',
+            'latitude': 25.3463,
+            'longitude': 55.4209,
+        },
+        {
+            'id': 'al_majaz',
+            'name': 'Al Majaz',
+            'latitude': 25.3205,
+            'longitude': 55.3786,
+        },
+        {
+            'id': 'al_nahda',
+            'name': 'Al Nahda',
+            'latitude': 25.3008,
+            'longitude': 55.3756,
+        },
+        {
+            'id': 'al_qasimia',
+            'name': 'Al Qasimia',
+            'latitude': 25.3590,
+            'longitude': 55.3909,
+        },
+        {
+            'id': 'muwaileh',
+            'name': 'Muwaileh',
+            'latitude': 25.2926,
+            'longitude': 55.4639,
+        },
+        {
+            'id': 'al_khan',
+            'name': 'Al Khan',
+            'latitude': 25.3374,
+            'longitude': 55.3753,
+        },
+        {
+            'id': 'university_city',
+            'name': 'University City',
+            'latitude': 25.2951,
+            'longitude': 55.4877,
+        },
+        {
+            'id': 'industrial_area',
+            'name': 'Industrial Area',
+            'latitude': 25.3284,
+            'longitude': 55.4006,
+        },
+    ]
+    return jsonify(areas), 200
 
 
 @bp.route('/token/', methods=['POST'])
