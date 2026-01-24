@@ -4,11 +4,11 @@ Analytics API endpoints
 from flask import Blueprint, request, jsonify
 
 from app.services.analytics import get_summary_stats, get_timeseries_data
-from app.services.dispatcher_analytics import (
-    get_dispatcher_summary_stats,
-    get_dispatcher_timeseries_data
+from app.services.department_analytics import (
+    get_department_summary_stats,
+    get_department_timeseries_data
 )
-from app.utils.permissions import admin_required, dispatcher_required
+from app.utils.permissions import admin_required, department_required
 
 bp = Blueprint('analytics', __name__)
 
