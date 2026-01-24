@@ -39,6 +39,9 @@ class UserSchema(Schema):
     first_name = fields.Str(allow_none=True)
     last_name = fields.Str(allow_none=True)
     is_staff = fields.Bool(dump_only=True)
+    is_responder = fields.Bool(dump_only=True)
+    is_dispatcher = fields.Bool(dump_only=True)
+    department_id = fields.Int(dump_only=True, allow_none=True)
     date_joined = fields.DateTime(dump_only=True)
 
 

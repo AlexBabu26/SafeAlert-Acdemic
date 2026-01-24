@@ -11,12 +11,29 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/">Home</a>
                 </li>
+                <!-- Citizen links -->
                 <li class="nav-item" id="nav-user-dashboard" style="display: none;">
                     <a class="nav-link" href="/reports">My Reports</a>
                 </li>
                 <li class="nav-item" id="nav-new-report" style="display: none;">
                     <a class="nav-link" href="/report/new">New Report</a>
                 </li>
+                <li class="nav-item" id="nav-track-report">
+                    <a class="nav-link" href="/track">Track Report</a>
+                </li>
+                <!-- Responder links -->
+                <li class="nav-item" id="nav-responder-dashboard" style="display: none;">
+                    <a class="nav-link" href="/responder/dashboard">
+                        <i class="bi bi-person-badge"></i> Responder Dashboard
+                    </a>
+                </li>
+                <!-- Dispatcher links -->
+                <li class="nav-item" id="nav-dispatcher-dashboard" style="display: none;">
+                    <a class="nav-link" href="/dispatcher/dashboard">
+                        <i class="bi bi-broadcast"></i> Command Center
+                    </a>
+                </li>
+                <!-- Admin links -->
                 <li class="nav-item" id="nav-admin-dashboard" style="display: none;">
                     <a class="nav-link" href="/admin/dashboard">Admin Dashboard</a>
                 </li>
@@ -34,6 +51,7 @@
                 <li class="nav-item dropdown" id="nav-user-menu" style="display: none;">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                         <span id="navbar-username">User</span>
+                        <span id="navbar-role-badge" class="badge ms-1" style="display: none;"></span>
                     </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="#" id="logout-link">Logout</a></li>
@@ -48,7 +66,19 @@
     document.addEventListener('DOMContentLoaded', function() {
         const token = localStorage.getItem('access_token');
         const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+        
         const isAdmin = userInfo.is_staff === true;
+        const isResponder = userInfo.is_responder === true;
+        const isDispatcher = userInfo.is_dispatcher === true;
+        
+        // Hide all role-specific links initially
+        const allNavItems = ['nav-user-dashboard', 'nav-new-report', 
+                            'nav-responder-dashboard', 'nav-dispatcher-dashboard',
+                            'nav-admin-dashboard', 'nav-admin-analytics'];
+        allNavItems.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
         
         if (token) {
             document.getElementById('nav-login').style.display = 'none';
@@ -56,27 +86,42 @@
             document.getElementById('nav-user-menu').style.display = 'block';
             document.getElementById('navbar-username').textContent = userInfo.username || 'User';
             
+            // Show role badge
+            const roleBadge = document.getElementById('navbar-role-badge');
             if (isAdmin) {
-                // Admin: show admin links only
-                document.getElementById('nav-user-dashboard').style.display = 'none';
-                document.getElementById('nav-new-report').style.display = 'none';
+                roleBadge.textContent = 'Admin';
+                roleBadge.className = 'badge bg-danger ms-1';
+                roleBadge.style.display = 'inline';
+            } else if (isDispatcher) {
+                roleBadge.textContent = 'Dispatcher';
+                roleBadge.className = 'badge bg-warning text-dark ms-1';
+                roleBadge.style.display = 'inline';
+            } else if (isResponder) {
+                roleBadge.textContent = 'Responder';
+                roleBadge.className = 'badge bg-info ms-1';
+                roleBadge.style.display = 'inline';
+            }
+            
+            if (isAdmin) {
+                // Admin: show admin links and command center
                 document.getElementById('nav-admin-dashboard').style.display = 'block';
                 document.getElementById('nav-admin-analytics').style.display = 'block';
+                document.getElementById('nav-dispatcher-dashboard').style.display = 'block';
+            } else if (isDispatcher) {
+                // Dispatcher: show command center
+                document.getElementById('nav-dispatcher-dashboard').style.display = 'block';
+            } else if (isResponder) {
+                // Responder: show responder dashboard
+                document.getElementById('nav-responder-dashboard').style.display = 'block';
             } else {
-                // Regular user: show user links only
+                // Regular citizen: show user links
                 document.getElementById('nav-user-dashboard').style.display = 'block';
                 document.getElementById('nav-new-report').style.display = 'block';
-                document.getElementById('nav-admin-dashboard').style.display = 'none';
-                document.getElementById('nav-admin-analytics').style.display = 'none';
             }
         } else {
             document.getElementById('nav-login').style.display = 'block';
             document.getElementById('nav-register').style.display = 'block';
             document.getElementById('nav-user-menu').style.display = 'none';
-            document.getElementById('nav-user-dashboard').style.display = 'none';
-            document.getElementById('nav-new-report').style.display = 'none';
-            document.getElementById('nav-admin-dashboard').style.display = 'none';
-            document.getElementById('nav-admin-analytics').style.display = 'none';
         }
         
         document.getElementById('logout-link')?.addEventListener('click', function(e) {
@@ -88,4 +133,3 @@
         });
     });
 </script>
-
