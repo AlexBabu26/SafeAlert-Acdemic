@@ -2,9 +2,7 @@
 Analytics API endpoints
 """
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from app.models import User
 from app.services.analytics import get_summary_stats, get_timeseries_data
 from app.utils.permissions import admin_required
 
@@ -13,7 +11,7 @@ bp = Blueprint('analytics', __name__)
 
 @bp.route('/summary/', methods=['GET'])
 @admin_required
-def summary():
+def summary(user):
     """Get summary statistics (admin only)"""
     stats = get_summary_stats()
     return jsonify(stats), 200
@@ -21,7 +19,7 @@ def summary():
 
 @bp.route('/timeseries/', methods=['GET'])
 @admin_required
-def timeseries():
+def timeseries(user):
     """Get time series data (admin only)"""
     days = request.args.get('days', 30, type=int)
     
