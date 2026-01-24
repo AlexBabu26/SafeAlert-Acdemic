@@ -5,7 +5,7 @@ from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from marshmallow import ValidationError
 from datetime import datetime, timedelta
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, case
 
 from app.extensions import db
 from app.models import (
@@ -69,9 +69,17 @@ def list_incidents(user):
         )
     
     # Order by severity (critical first) and time
-    severity_order = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO']
+    # Use CASE WHEN for SQLite compatibility (instead of MySQL's FIELD function)
+    severity_order = case(
+        (IncidentReport.severity == 'CRITICAL', 1),
+        (IncidentReport.severity == 'HIGH', 2),
+        (IncidentReport.severity == 'MEDIUM', 3),
+        (IncidentReport.severity == 'LOW', 4),
+        (IncidentReport.severity == 'INFO', 5),
+        else_=6
+    )
     query = query.order_by(
-        func.field(IncidentReport.severity, *severity_order),
+        severity_order,
         IncidentReport.created_at.desc()
     )
     

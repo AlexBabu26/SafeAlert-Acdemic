@@ -11,8 +11,16 @@ class UserRegistrationSchema(Schema):
     email = fields.Email(required=False, allow_none=True)
     first_name = fields.Str(required=False, allow_none=True, default='')
     last_name = fields.Str(required=False, allow_none=True, default='')
+    phone_number = fields.Str(required=False, allow_none=True)
     password = fields.Str(required=True, validate=validate.Length(min=8), load_only=True)
     password2 = fields.Str(required=True, load_only=True)
+    
+    # Role selection - 'citizen' or 'responder'
+    role = fields.Str(required=False, validate=validate.OneOf(['citizen', 'responder']), load_default='citizen')
+    
+    # Responder-specific fields (required if role is responder)
+    department_id = fields.Int(required=False, allow_none=True)
+    badge_number = fields.Str(required=False, allow_none=True)
     
     @validates_schema
     def validate_passwords(self, data, **kwargs):
@@ -29,6 +37,11 @@ class UserRegistrationSchema(Schema):
         common_passwords = ['password', '12345678', 'qwerty', 'abc123']
         if password.lower() in common_passwords:
             raise ValidationError({'password': ['This password is too common.']})
+        
+        # Validate responder-specific fields
+        if data.get('role') == 'responder':
+            if not data.get('department_id'):
+                raise ValidationError({'department_id': ['Department is required for responder registration.']})
 
 
 class UserSchema(Schema):
@@ -38,10 +51,45 @@ class UserSchema(Schema):
     email = fields.Email(allow_none=True)
     first_name = fields.Str(allow_none=True)
     last_name = fields.Str(allow_none=True)
+    is_active = fields.Bool(dump_only=True)
     is_staff = fields.Bool(dump_only=True)
     is_responder = fields.Bool(dump_only=True)
     is_dispatcher = fields.Bool(dump_only=True)
     department_id = fields.Int(dump_only=True, allow_none=True)
     date_joined = fields.DateTime(dump_only=True)
+
+
+class UserAdminSchema(Schema):
+    """Schema for admin user management - includes all fields"""
+    id = fields.Int(dump_only=True)
+    username = fields.Str()
+    email = fields.Email(allow_none=True)
+    first_name = fields.Str(allow_none=True)
+    last_name = fields.Str(allow_none=True)
+    phone_number = fields.Str(allow_none=True)
+    is_active = fields.Bool()
+    is_staff = fields.Bool()
+    is_responder = fields.Bool()
+    is_dispatcher = fields.Bool()
+    department_id = fields.Int(allow_none=True)
+    badge_number = fields.Str(allow_none=True)
+    is_on_duty = fields.Bool(dump_only=True)
+    is_available = fields.Bool(dump_only=True)
+    date_joined = fields.DateTime(dump_only=True)
+    last_login = fields.DateTime(dump_only=True, allow_none=True)
+    
+    # Computed fields
+    role_display = fields.Str(dump_only=True)
+    full_name = fields.Str(dump_only=True)
+
+
+class UserUpdateSchema(Schema):
+    """Schema for updating user by admin"""
+    is_active = fields.Bool(required=False)
+    is_staff = fields.Bool(required=False)
+    is_responder = fields.Bool(required=False)
+    is_dispatcher = fields.Bool(required=False)
+    department_id = fields.Int(required=False, allow_none=True)
+    badge_number = fields.Str(required=False, allow_none=True)
 
 

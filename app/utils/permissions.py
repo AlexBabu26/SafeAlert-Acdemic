@@ -22,10 +22,13 @@ def admin_required(f):
     def decorated_function(*args, **kwargs):
         user = get_current_user()
         
-        if not user or not user.is_staff:
+        if not user:
+            return jsonify({'detail': 'Authentication credentials were not provided.'}), 401
+        
+        if not user.is_staff:
             return jsonify({'detail': 'You do not have permission to perform this action.'}), 403
         
-        return f(*args, **kwargs)
+        return f(user, *args, **kwargs)
     
     return decorated_function
 

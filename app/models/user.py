@@ -19,6 +19,9 @@ class User(db.Model):
     phone_number = db.Column(db.String(20), nullable=True)
     profile_picture = db.Column(db.String(255), nullable=True)
     
+    # Account status
+    is_active = db.Column(db.Boolean, default=True, nullable=False)  # Active/Deactivated
+    
     # Role flags (users can have multiple roles)
     is_staff = db.Column(db.Boolean, default=False, nullable=False)  # Admin
     is_dispatcher = db.Column(db.Boolean, default=False, nullable=False)  # Dispatcher

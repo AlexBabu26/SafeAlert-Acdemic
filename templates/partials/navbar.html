@@ -37,6 +37,11 @@
                 <li class="nav-item" id="nav-admin-dashboard" style="display: none;">
                     <a class="nav-link" href="/admin/dashboard">Admin Dashboard</a>
                 </li>
+                <li class="nav-item" id="nav-admin-users" style="display: none;">
+                    <a class="nav-link" href="/admin/users">
+                        <i class="bi bi-people"></i> Users
+                    </a>
+                </li>
                 <li class="nav-item" id="nav-admin-analytics" style="display: none;">
                     <a class="nav-link" href="/admin/analytics">Analytics</a>
                 </li>
@@ -74,7 +79,7 @@
         // Hide all role-specific links initially
         const allNavItems = ['nav-user-dashboard', 'nav-new-report', 
                             'nav-responder-dashboard', 'nav-dispatcher-dashboard',
-                            'nav-admin-dashboard', 'nav-admin-analytics'];
+                            'nav-admin-dashboard', 'nav-admin-users', 'nav-admin-analytics'];
         allNavItems.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
@@ -105,6 +110,7 @@
             if (isAdmin) {
                 // Admin: show admin links and command center
                 document.getElementById('nav-admin-dashboard').style.display = 'block';
+                document.getElementById('nav-admin-users').style.display = 'block';
                 document.getElementById('nav-admin-analytics').style.display = 'block';
                 document.getElementById('nav-dispatcher-dashboard').style.display = 'block';
             } else if (isDispatcher) {
