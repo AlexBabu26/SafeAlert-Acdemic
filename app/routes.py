@@ -65,24 +65,30 @@ def responder_assignment_detail(pk):
     return render_template('responder/assignment_detail.html')
 
 
-# ==================== Dispatcher Routes ====================
+# ==================== Department Routes ====================
 
-@bp.route('/dispatcher/dashboard')
-def dispatcher_dashboard():
-    """Dispatcher command center"""
-    return render_template('dispatcher/dashboard.html')
-
-
-@bp.route('/dispatcher/incidents/<int:pk>')
-def dispatcher_incident_detail(pk):
-    """Dispatcher incident detail page"""
-    return render_template('dispatcher/incident_detail.html')
+@bp.route('/department/dashboard')
+def department_dashboard():
+    """Department command center"""
+    return render_template('department/dashboard.html')
 
 
-@bp.route('/dispatcher/departments')
-def dispatcher_departments():
-    """Dispatcher departments overview"""
-    return render_template('dispatcher/departments.html')
+@bp.route('/department/incidents/<int:pk>')
+def department_incident_detail(pk):
+    """Department incident detail page"""
+    return render_template('department/incident_detail.html')
+
+
+@bp.route('/department/departments')
+def department_departments():
+    """Department overview page"""
+    return render_template('department/departments.html')
+
+
+@bp.route('/department/respondents')
+def department_respondents():
+    """Department respondent management page"""
+    return render_template('department/respondents.html')
 
 
 # ==================== Admin Routes ====================

@@ -1,5 +1,6 @@
 """
-Dispatcher API endpoints
+Department API endpoints (formerly Dispatcher)
+Handles incident management, respondent management, and department operations
 """
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -23,23 +24,26 @@ from app.schemas.incident import IncidentReportSchema, IncidentListSchema, Incid
 from app.schemas.assignment import IncidentAssignmentSchema, AssignmentListSchema
 from app.schemas.department import DepartmentSchema, DepartmentListSchema, DepartmentCreateSchema
 from app.schemas.alert import SafetyAlertSchema, SafetyAlertCreateSchema
-from app.utils.permissions import dispatcher_required, dispatcher_or_admin_required
+from app.schemas.user import UserAdminSchema
+from app.utils.permissions import department_required, department_or_admin_required
 from app.services.allocation import AllocationService, get_nearby_departments
 from app.services.escalation import EscalationService
 from app.services.notification import NotificationService
-from app.services.dispatcher_analytics import (
-    get_dispatcher_summary_stats,
-    get_dispatcher_timeseries_data
+from app.services.department_analytics import (
+    get_department_summary_stats,
+    get_department_timeseries_data
 )
 from app.socketio_events import broadcast_incident_updated, broadcast_assignment_created, broadcast_safety_alert
 
-bp = Blueprint('dispatcher', __name__)
+bp = Blueprint('department', __name__)
 
+
+# ==================== Incident Management ====================
 
 @bp.route('/incidents/', methods=['GET'])
-@dispatcher_required
+@department_required
 def list_incidents(user):
-    """List all active incidents for dispatcher view"""
+    """List all active incidents for department view"""
     # Filter parameters
     status = request.args.get('status')
     severity = request.args.get('severity')
@@ -98,16 +102,16 @@ def list_incidents(user):
     
     return jsonify({
         'count': total,
-        'next': f'/api/dispatcher/incidents/?page={page + 1}' if page * per_page < total else None,
-        'previous': f'/api/dispatcher/incidents/?page={page - 1}' if page > 1 else None,
+        'next': f'/api/department/incidents/?page={page + 1}' if page * per_page < total else None,
+        'previous': f'/api/department/incidents/?page={page - 1}' if page > 1 else None,
         'results': schema.dump(incidents)
     }), 200
 
 
 @bp.route('/incidents/<int:id>/', methods=['GET'])
-@dispatcher_required
+@department_required
 def get_incident(user, id):
-    """Get incident details for dispatcher"""
+    """Get incident details for department"""
     incident = IncidentReport.query.get(id)
     
     if not incident:
@@ -124,7 +128,7 @@ def get_incident(user, id):
 
 
 @bp.route('/incidents/<int:id>/assign/', methods=['POST'])
-@dispatcher_required
+@department_required
 def assign_incident(user, id):
     """Manually assign incident to departments"""
     incident = IncidentReport.query.get(id)
@@ -188,7 +192,7 @@ def assign_incident(user, id):
 
 
 @bp.route('/incidents/<int:id>/status/', methods=['PATCH'])
-@dispatcher_required
+@department_required
 def update_incident_status(user, id):
     """Update incident status"""
     incident = IncidentReport.query.get(id)
@@ -219,7 +223,7 @@ def update_incident_status(user, id):
         new_status=new_status,
         changed_by_id=user.id,
         notes=notes,
-        source='DISPATCHER'
+        source='DEPARTMENT'
     )
     db.session.add(history)
     
@@ -248,7 +252,7 @@ def update_incident_status(user, id):
 
 
 @bp.route('/incidents/<int:id>/escalate/', methods=['POST'])
-@dispatcher_required
+@department_required
 def escalate_incident(user, id):
     """Manually escalate an incident"""
     incident = IncidentReport.query.get(id)
@@ -274,7 +278,7 @@ def escalate_incident(user, id):
 
 
 @bp.route('/incidents/<int:id>/nearby-departments/', methods=['GET'])
-@dispatcher_required
+@department_required
 def get_nearby_departments_for_incident(user, id):
     """Get top 5 nearby departments for an incident with distance and priority"""
     incident = IncidentReport.query.get(id)
@@ -344,10 +348,229 @@ def get_nearby_departments_for_incident(user, id):
     }), 200
 
 
+# ==================== Respondent Management ====================
+
+@bp.route('/respondents/', methods=['GET'])
+@department_required
+def list_respondents(user):
+    """List all respondents under this department"""
+    # Only show respondents from the department user's department
+    query = User.query.filter(
+        User.department_id == user.department_id,
+        User.is_responder == True
+    )
+    
+    # Optional filters
+    is_active = request.args.get('is_active')
+    is_on_duty = request.args.get('is_on_duty')
+    is_available = request.args.get('is_available')
+    search = request.args.get('search')
+    
+    if is_active is not None:
+        is_active_bool = is_active.lower() in ('true', '1', 'yes')
+        query = query.filter(User.is_active == is_active_bool)
+    
+    if is_on_duty is not None:
+        is_on_duty_bool = is_on_duty.lower() in ('true', '1', 'yes')
+        query = query.filter(User.is_on_duty == is_on_duty_bool)
+    
+    if is_available is not None:
+        is_available_bool = is_available.lower() in ('true', '1', 'yes')
+        query = query.filter(User.is_available == is_available_bool)
+    
+    if search:
+        search_filter = f'%{search}%'
+        query = query.filter(
+            or_(
+                User.username.ilike(search_filter),
+                User.first_name.ilike(search_filter),
+                User.last_name.ilike(search_filter),
+                User.badge_number.ilike(search_filter)
+            )
+        )
+    
+    respondents = query.order_by(User.username).all()
+    
+    schema = UserAdminSchema(many=True)
+    return jsonify({
+        'results': schema.dump(respondents),
+        'total': len(respondents)
+    }), 200
+
+
+@bp.route('/respondents/pending/', methods=['GET'])
+@department_required
+def list_pending_respondents(user):
+    """List respondents pending activation under this department"""
+    respondents = User.query.filter(
+        User.department_id == user.department_id,
+        User.is_responder == True,
+        User.is_active == False
+    ).order_by(User.date_joined.desc()).all()
+    
+    schema = UserAdminSchema(many=True)
+    return jsonify({
+        'results': schema.dump(respondents),
+        'total': len(respondents)
+    }), 200
+
+
+@bp.route('/respondents/<int:respondent_id>/', methods=['GET'])
+@department_required
+def get_respondent(user, respondent_id):
+    """Get respondent details"""
+    respondent = User.query.get(respondent_id)
+    
+    if not respondent:
+        return jsonify({'detail': 'Respondent not found.'}), 404
+    
+    # Ensure respondent belongs to the same department
+    if respondent.department_id != user.department_id:
+        return jsonify({'detail': 'You can only view respondents from your department.'}), 403
+    
+    if not respondent.is_responder:
+        return jsonify({'detail': 'User is not a respondent.'}), 400
+    
+    schema = UserAdminSchema()
+    result = schema.dump(respondent)
+    
+    # Add assignment stats
+    today = datetime.utcnow().date()
+    active_assignments = IncidentAssignment.query.filter(
+        IncidentAssignment.responder_id == respondent.id,
+        IncidentAssignment.status.in_(AssignmentStatus.ACTIVE_STATUSES)
+    ).count()
+    
+    completed_today = IncidentAssignment.query.filter(
+        IncidentAssignment.responder_id == respondent.id,
+        IncidentAssignment.status == AssignmentStatus.COMPLETED,
+        func.date(IncidentAssignment.completed_at) == today
+    ).count()
+    
+    result['stats'] = {
+        'active_assignments': active_assignments,
+        'completed_today': completed_today,
+    }
+    
+    return jsonify(result), 200
+
+
+@bp.route('/respondents/<int:respondent_id>/activate/', methods=['POST'])
+@department_required
+def activate_respondent(user, respondent_id):
+    """Activate a respondent account under this department"""
+    respondent = User.query.get(respondent_id)
+    
+    if not respondent:
+        return jsonify({'detail': 'Respondent not found.'}), 404
+    
+    # Ensure respondent belongs to the same department
+    if respondent.department_id != user.department_id:
+        return jsonify({'detail': 'You can only manage respondents from your department.'}), 403
+    
+    if not respondent.is_responder:
+        return jsonify({'detail': 'User is not a respondent.'}), 400
+    
+    if respondent.is_active:
+        return jsonify({'detail': 'Respondent is already active.'}), 400
+    
+    respondent.is_active = True
+    db.session.commit()
+    
+    schema = UserAdminSchema()
+    return jsonify({
+        'message': f'Respondent {respondent.username} has been activated.',
+        'user': schema.dump(respondent)
+    }), 200
+
+
+@bp.route('/respondents/<int:respondent_id>/deactivate/', methods=['POST'])
+@department_required
+def deactivate_respondent(user, respondent_id):
+    """Deactivate a respondent account under this department"""
+    respondent = User.query.get(respondent_id)
+    
+    if not respondent:
+        return jsonify({'detail': 'Respondent not found.'}), 404
+    
+    # Ensure respondent belongs to the same department
+    if respondent.department_id != user.department_id:
+        return jsonify({'detail': 'You can only manage respondents from your department.'}), 403
+    
+    if not respondent.is_responder:
+        return jsonify({'detail': 'User is not a respondent.'}), 400
+    
+    if not respondent.is_active:
+        return jsonify({'detail': 'Respondent is already deactivated.'}), 400
+    
+    respondent.is_active = False
+    respondent.is_on_duty = False
+    respondent.is_available = False
+    db.session.commit()
+    
+    schema = UserAdminSchema()
+    return jsonify({
+        'message': f'Respondent {respondent.username} has been deactivated.',
+        'user': schema.dump(respondent)
+    }), 200
+
+
+@bp.route('/assignments/<int:assignment_id>/assign-respondent/', methods=['POST'])
+@department_required
+def assign_respondent_to_task(user, assignment_id):
+    """Assign a specific respondent to an assignment/task"""
+    assignment = IncidentAssignment.query.get(assignment_id)
+    
+    if not assignment:
+        return jsonify({'detail': 'Assignment not found.'}), 404
+    
+    # Ensure assignment belongs to the same department
+    if assignment.department_id != user.department_id:
+        return jsonify({'detail': 'You can only manage assignments from your department.'}), 403
+    
+    if not request.is_json:
+        return jsonify({'detail': 'JSON data required.'}), 400
+    
+    respondent_id = request.json.get('respondent_id')
+    if not respondent_id:
+        return jsonify({'detail': 'respondent_id is required.'}), 400
+    
+    respondent = User.query.get(respondent_id)
+    
+    if not respondent:
+        return jsonify({'detail': 'Respondent not found.'}), 404
+    
+    # Validate respondent
+    if respondent.department_id != user.department_id:
+        return jsonify({'detail': 'Respondent must be from your department.'}), 403
+    
+    if not respondent.is_responder:
+        return jsonify({'detail': 'User is not a respondent.'}), 400
+    
+    if not respondent.is_active:
+        return jsonify({'detail': 'Respondent account is not active.'}), 400
+    
+    # Assign the respondent
+    assignment.responder_id = respondent_id
+    db.session.commit()
+    
+    # Notify the respondent
+    notification_service = NotificationService()
+    notification_service.notify_assignment_created(assignment)
+    
+    schema = IncidentAssignmentSchema()
+    return jsonify({
+        'message': f'Assignment assigned to {respondent.full_name}.',
+        'assignment': schema.dump(assignment)
+    }), 200
+
+
+# ==================== Map & Real-time Data ====================
+
 @bp.route('/map/', methods=['GET'])
-@dispatcher_required
+@department_required
 def get_map_data(user):
-    """Get real-time map data for dispatcher command center"""
+    """Get real-time map data for department command center"""
     # Get all active incidents with location
     active_incidents = IncidentReport.query.filter(
         IncidentReport.status.in_(IncidentStatus.ACTIVE_STATUSES),
@@ -398,8 +621,10 @@ def get_map_data(user):
     }), 200
 
 
+# ==================== Department Management ====================
+
 @bp.route('/departments/', methods=['GET'])
-@dispatcher_required
+@department_required
 def list_departments(user):
     """List all departments with status"""
     dept_type = request.args.get('type')
@@ -437,7 +662,7 @@ def list_departments(user):
 
 
 @bp.route('/departments/<int:id>/', methods=['GET'])
-@dispatcher_required
+@department_required
 def get_department(user, id):
     """Get department details"""
     department = Department.query.get(id)
@@ -474,7 +699,7 @@ def get_department(user, id):
 
 
 @bp.route('/departments/', methods=['POST'])
-@dispatcher_or_admin_required
+@department_or_admin_required
 def create_department(user):
     """Create a new department"""
     if not request.is_json:
@@ -498,8 +723,10 @@ def create_department(user):
     return jsonify(response_schema.dump(department)), 201
 
 
+# ==================== Alerts ====================
+
 @bp.route('/alerts/', methods=['POST'])
-@dispatcher_required
+@department_required
 def create_alert(user):
     """Create a safety alert"""
     if not request.is_json:
@@ -529,10 +756,12 @@ def create_alert(user):
     return jsonify(response_schema.dump(alert)), 201
 
 
+# ==================== Statistics & Analytics ====================
+
 @bp.route('/stats/', methods=['GET'])
-@dispatcher_required
+@department_required
 def get_stats(user):
-    """Get dispatcher dashboard statistics"""
+    """Get department dashboard statistics"""
     today = datetime.utcnow().date()
     
     # Active incidents by status
@@ -567,6 +796,23 @@ def get_stats(user):
     ).all()
     sla_breached_count = sum(1 for inc in sla_breached if inc.is_sla_breached)
     
+    # Department-specific stats
+    my_respondents = User.query.filter(
+        User.department_id == user.department_id,
+        User.is_responder == True
+    ).count()
+    
+    my_respondents_on_duty = User.query.filter(
+        User.department_id == user.department_id,
+        User.is_responder == True,
+        User.is_on_duty == True
+    ).count()
+    
+    my_active_assignments = IncidentAssignment.query.filter(
+        IncidentAssignment.department_id == user.department_id,
+        IncidentAssignment.status.in_(AssignmentStatus.ACTIVE_STATUSES)
+    ).count()
+    
     return jsonify({
         'active_incidents': {
             'by_status': {s: c for s, c in status_counts},
@@ -579,27 +825,32 @@ def get_stats(user):
         },
         'sla': {
             'breached_count': sla_breached_count,
+        },
+        'my_department': {
+            'total_respondents': my_respondents,
+            'respondents_on_duty': my_respondents_on_duty,
+            'active_assignments': my_active_assignments,
         }
     }), 200
 
 
 @bp.route('/analytics/summary/', methods=['GET'])
-@dispatcher_required
-def dispatcher_analytics_summary(user):
-    """Get analytics summary for dispatcher's department only"""
+@department_required
+def department_analytics_summary(user):
+    """Get analytics summary for department's department only"""
     if not user.department_id:
-        return jsonify({'detail': 'Dispatcher must be assigned to a department.'}), 400
+        return jsonify({'detail': 'Department user must be assigned to a department.'}), 400
     
-    stats = get_dispatcher_summary_stats(user.department_id)
+    stats = get_department_summary_stats(user.department_id)
     return jsonify(stats), 200
 
 
 @bp.route('/analytics/timeseries/', methods=['GET'])
-@dispatcher_required
-def dispatcher_analytics_timeseries(user):
-    """Get analytics time series data for dispatcher's department only"""
+@department_required
+def department_analytics_timeseries(user):
+    """Get analytics time series data for department's department only"""
     if not user.department_id:
-        return jsonify({'detail': 'Dispatcher must be assigned to a department.'}), 400
+        return jsonify({'detail': 'Department user must be assigned to a department.'}), 400
     
     days = request.args.get('days', 30, type=int)
     
@@ -609,6 +860,6 @@ def dispatcher_analytics_timeseries(user):
     if days < 1:
         days = 1
     
-    data = get_dispatcher_timeseries_data(user.department_id, days=days)
+    data = get_department_timeseries_data(user.department_id, days=days)
     return jsonify(data), 200
 

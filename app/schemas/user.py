@@ -15,10 +15,10 @@ class UserRegistrationSchema(Schema):
     password = fields.Str(required=True, validate=validate.Length(min=8), load_only=True)
     password2 = fields.Str(required=True, load_only=True)
     
-    # Role selection - 'citizen' or 'responder'
-    role = fields.Str(required=False, validate=validate.OneOf(['citizen', 'responder']), load_default='citizen')
+    # Role selection - 'citizen', 'responder', or 'department'
+    role = fields.Str(required=False, validate=validate.OneOf(['citizen', 'responder', 'department']), load_default='citizen')
     
-    # Responder-specific fields (required if role is responder)
+    # Responder/Department-specific fields (required if role is responder or department)
     department_id = fields.Int(required=False, allow_none=True)
     badge_number = fields.Str(required=False, allow_none=True)
     
@@ -47,6 +47,11 @@ class UserRegistrationSchema(Schema):
         if data.get('role') == 'responder':
             if not data.get('department_id'):
                 raise ValidationError({'department_id': ['Department is required for responder registration.']})
+        
+        # Validate department-specific fields
+        if data.get('role') == 'department':
+            if not data.get('department_id'):
+                raise ValidationError({'department_id': ['Department is required for department user registration.']})
 
 
 class UserSchema(Schema):
@@ -59,7 +64,7 @@ class UserSchema(Schema):
     is_active = fields.Bool(dump_only=True)
     is_staff = fields.Bool(dump_only=True)
     is_responder = fields.Bool(dump_only=True)
-    is_dispatcher = fields.Bool(dump_only=True)
+    is_department = fields.Bool(dump_only=True)
     department_id = fields.Int(dump_only=True, allow_none=True)
     date_joined = fields.DateTime(dump_only=True)
 
@@ -75,7 +80,7 @@ class UserAdminSchema(Schema):
     is_active = fields.Bool()
     is_staff = fields.Bool()
     is_responder = fields.Bool()
-    is_dispatcher = fields.Bool()
+    is_department = fields.Bool()
     department_id = fields.Int(allow_none=True)
     badge_number = fields.Str(allow_none=True)
     is_on_duty = fields.Bool(dump_only=True)
@@ -93,7 +98,7 @@ class UserUpdateSchema(Schema):
     is_active = fields.Bool(required=False)
     is_staff = fields.Bool(required=False)
     is_responder = fields.Bool(required=False)
-    is_dispatcher = fields.Bool(required=False)
+    is_department = fields.Bool(required=False)
     department_id = fields.Int(required=False, allow_none=True)
     badge_number = fields.Str(required=False, allow_none=True)
 

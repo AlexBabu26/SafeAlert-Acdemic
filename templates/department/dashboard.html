@@ -1,0 +1,1142 @@
+{% extends 'base.html' %}
+
+{% block title %}Department Command Center - SafeAlert{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    :root {
+        --primary-color: #1e3a5f;
+        --accent-color: #ff6b35;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --text-primary: #1e293b;
+        --text-secondary: #475569;
+        --text-muted: #64748b;
+        --bg-light: #f8fafc;
+        --border-color: #e2e8f0;
+    }
+
+    body {
+        background: #f1f5f9;
+    }
+
+    .command-center {
+        display: flex;
+        height: calc(100vh - 60px);
+    }
+
+    .sidebar {
+        width: 400px;
+        background: white;
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .sidebar-header {
+        padding: 1rem;
+        background: linear-gradient(135deg, var(--primary-color), #2d4a6f);
+        color: white;
+    }
+
+    .stats-bar {
+        display: flex;
+        gap: 0.5rem;
+        padding: 1rem;
+        background: var(--bg-light);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .stat-item {
+        text-align: center;
+        flex: 1;
+        padding: 0.5rem;
+        border-radius: 10px;
+        background: white;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .stat-item .value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .stat-item .label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.025em;
+    }
+
+    .stat-item.critical .value { color: var(--danger-color); }
+    .stat-item.critical { border-bottom: 3px solid var(--danger-color); }
+    .stat-item.warning .value { color: var(--warning-color); }
+    .stat-item.warning { border-bottom: 3px solid var(--warning-color); }
+
+    .filter-bar {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        gap: 0.5rem;
+        background: white;
+    }
+
+    .filter-bar select {
+        flex: 1;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        color: var(--text-primary);
+        background: white;
+    }
+
+    .filter-bar select:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+    }
+
+    .incidents-list {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .incident-item {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-left: 4px solid transparent;
+    }
+
+    .incident-item:hover {
+        background: var(--bg-light);
+    }
+
+    .incident-item.selected {
+        background: #fff7ed;
+        border-left-color: var(--accent-color);
+    }
+
+    .incident-item.severity-CRITICAL { border-left-color: var(--danger-color); }
+    .incident-item.severity-HIGH { border-left-color: var(--warning-color); }
+
+    .incident-item h6 {
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .incident-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.5rem;
+    }
+
+    .severity-badge {
+        display: inline-block;
+        padding: 0.25rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .severity-CRITICAL { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .severity-HIGH { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+    .severity-MEDIUM { background: #fefce8; color: #ca8a04; border: 1px solid #fef08a; }
+    .severity-LOW { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+
+    .status-badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 12px;
+        background: #e2e8f0;
+        color: #475569;
+        font-weight: 500;
+    }
+
+    .map-container {
+        flex: 1;
+        position: relative;
+    }
+
+    #map {
+        height: 100%;
+        width: 100%;
+    }
+
+    .map-legend {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        background: white;
+        padding: 1rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        z-index: 1000;
+        font-size: 0.8rem;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-secondary);
+    }
+
+    .legend-item:last-child { margin-bottom: 0; }
+
+    .legend-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .legend-dot.critical { background: var(--danger-color); }
+    .legend-dot.high { background: var(--warning-color); }
+    .legend-dot.medium { background: #3b82f6; }
+    .legend-dot.responder { background: var(--success-color); }
+    .legend-dot.department { background: #8b5cf6; }
+
+    .detail-panel {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 420px;
+        background: white;
+        box-shadow: -4px 0 25px rgba(0,0,0,0.12);
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        overflow-y: auto;
+        z-index: 1001;
+    }
+
+    .detail-panel.open {
+        transform: translateX(0);
+    }
+
+    .detail-header {
+        padding: 1.25rem;
+        background: linear-gradient(135deg, var(--primary-color), #2d4a6f);
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .detail-header h5 {
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .detail-header .close-btn {
+        background: rgba(255,255,255,0.15);
+        border: none;
+        color: white;
+        font-size: 1.25rem;
+        cursor: pointer;
+        line-height: 1;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+    }
+
+    .detail-header .close-btn:hover {
+        background: rgba(255,255,255,0.25);
+    }
+
+    .detail-content {
+        padding: 1.25rem;
+    }
+
+    .detail-section {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .detail-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .detail-section h4 {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-bottom: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+    }
+
+    .detail-section p {
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        line-height: 1.5;
+    }
+
+    .detail-section p strong {
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.5rem 1rem;
+    }
+
+    .info-grid dt {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+
+    .info-grid dd {
+        color: var(--text-primary);
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .action-btn {
+        padding: 0.875rem 1rem;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .action-btn.primary {
+        background: linear-gradient(135deg, var(--accent-color), #e55a2b);
+        color: white;
+    }
+
+    .action-btn.success {
+        background: linear-gradient(135deg, var(--success-color), #059669);
+        color: white;
+    }
+
+    .action-btn.secondary {
+        background: var(--bg-light);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+    }
+
+    .action-btn.secondary:hover {
+        background: #f1f5f9;
+    }
+
+    /* Nearby Departments Section */
+    .nearby-dept-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .nearby-dept-item {
+        padding: 1rem;
+        background: var(--bg-light);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        transition: all 0.2s ease;
+    }
+
+    .nearby-dept-item:hover {
+        border-color: var(--accent-color);
+        box-shadow: 0 2px 8px rgba(255, 107, 53, 0.1);
+    }
+
+    .nearby-dept-item.assigned {
+        background: #ecfdf5;
+        border-color: var(--success-color);
+    }
+
+    .nearby-dept-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.5rem;
+    }
+
+    .nearby-dept-name {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+
+    .priority-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        font-weight: 700;
+        font-size: 0.8rem;
+    }
+
+    .priority-badge.priority-1 { background: #fef3c7; color: #b45309; border: 2px solid #f59e0b; }
+    .priority-badge.priority-2 { background: #e0e7ff; color: #4338ca; border: 2px solid #6366f1; }
+    .priority-badge.priority-3 { background: #d1fae5; color: #047857; border: 2px solid #10b981; }
+    .priority-badge.priority-4, .priority-badge.priority-5 { background: #f1f5f9; color: #475569; border: 2px solid #94a3b8; }
+
+    .nearby-dept-meta {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .nearby-dept-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .nearby-dept-meta .distance { color: var(--primary-color); font-weight: 600; }
+    .nearby-dept-meta .capacity { color: var(--success-color); }
+    .nearby-dept-meta .busy { color: var(--warning-color); }
+
+    .dept-type-badge {
+        display: inline-block;
+        padding: 0.15rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .assign-dept-btn {
+        margin-top: 0.75rem;
+        padding: 0.5rem 1rem;
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        width: 100%;
+    }
+
+    .assign-dept-btn:hover {
+        background: #e55a2b;
+    }
+
+    .assign-dept-btn.assigned {
+        background: var(--success-color);
+        cursor: default;
+    }
+
+    /* Assignment List */
+    .assignment-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .assignment-item {
+        padding: 0.875rem 1rem;
+        background: var(--bg-light);
+        border-radius: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-left: 4px solid var(--success-color);
+    }
+
+    .assignment-item .dept-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .assignment-item .dept-name {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .assignment-item .dept-status {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .assignment-item .priority-rank {
+        background: var(--primary-color);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .pulse-indicator {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    .pulse-indicator.critical {
+        background: var(--danger-color);
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.2); opacity: 0.7; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    .loading-spinner {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 1.5rem;
+        color: var(--text-muted);
+    }
+
+    @media (max-width: 1200px) {
+        .sidebar { width: 320px; }
+        .detail-panel { width: 380px; }
+    }
+
+    @media (max-width: 768px) {
+        .command-center { flex-direction: column; }
+        .sidebar { width: 100%; height: 40%; }
+        .map-container { height: 60%; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="command-center">
+    <!-- Incidents Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h5 class="mb-0">Active Incidents</h5>
+        </div>
+        
+        <div class="stats-bar">
+            <div class="stat-item critical">
+                <div class="value" id="critical-count">0</div>
+                <div class="label">Critical</div>
+            </div>
+            <div class="stat-item warning">
+                <div class="value" id="high-count">0</div>
+                <div class="label">High</div>
+            </div>
+            <div class="stat-item">
+                <div class="value" id="total-count">0</div>
+                <div class="label">Total</div>
+            </div>
+            <div class="stat-item">
+                <div class="value" id="sla-breach-count">0</div>
+                <div class="label">SLA Breach</div>
+            </div>
+        </div>
+        
+        <div class="filter-bar">
+            <select id="filter-severity" onchange="applyFilters()">
+                <option value="">All Severity</option>
+                <option value="CRITICAL">Critical</option>
+                <option value="HIGH">High</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="LOW">Low</option>
+            </select>
+            <select id="filter-status" onchange="applyFilters()">
+                <option value="">All Status</option>
+                <option value="REPORTED">Reported</option>
+                <option value="VERIFIED">Verified</option>
+                <option value="DISPATCHED">Dispatched</option>
+                <option value="EN_ROUTE">En Route</option>
+                <option value="ON_SCENE">On Scene</option>
+            </select>
+        </div>
+        
+        <div class="incidents-list" id="incidents-list">
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Map Container -->
+    <div class="map-container">
+        <div id="map"></div>
+        
+        <div class="map-legend">
+            <div class="legend-item">
+                <span class="legend-dot critical"></span> Critical Incident
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot high"></span> High Priority
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot medium"></span> Other Incident
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot responder"></span> Respondent
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot department"></span> Department
+            </div>
+        </div>
+        
+        <!-- Detail Panel -->
+        <div class="detail-panel" id="detail-panel">
+            <div class="detail-header">
+                <h5 class="mb-0" id="detail-title">Incident Details</h5>
+                <button class="close-btn" onclick="closeDetailPanel()">&times;</button>
+            </div>
+            <div class="detail-content" id="detail-content">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const API_BASE = '/api/department';
+let map = null;
+let markers = { incidents: {}, responders: {}, departments: {} };
+let incidents = [];
+let selectedIncidentId = null;
+let socket = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    initMap();
+    loadIncidents();
+    loadMapData();
+    loadStats();
+    initSocketIO();
+    
+    // Refresh every 30 seconds
+    setInterval(() => {
+        loadMapData();
+        loadStats();
+    }, 30000);
+});
+
+function initMap() {
+    map = L.map('map').setView([25.3463, 55.4209], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+}
+
+function loadIncidents() {
+    const severity = document.getElementById('filter-severity').value;
+    const status = document.getElementById('filter-status').value;
+    
+    let url = `${API_BASE}/incidents/?`;
+    if (severity) url += `severity=${severity}&`;
+    if (status) url += `status=${status}&`;
+    
+    apiRequest(url)
+        .then(data => {
+            incidents = data.results || [];
+            renderIncidentsList(incidents);
+            updateIncidentMarkers();
+        })
+        .catch(err => {
+            console.error('Error loading incidents:', err);
+            document.getElementById('incidents-list').innerHTML = 
+                '<div class="text-center text-muted py-4">Error loading incidents</div>';
+        });
+}
+
+function loadMapData() {
+    apiRequest(`${API_BASE}/map/`)
+        .then(data => {
+            updateResponderMarkers(data.responders);
+            updateDepartmentMarkers(data.departments);
+        })
+        .catch(err => console.error('Error loading map data:', err));
+}
+
+function loadStats() {
+    apiRequest(`${API_BASE}/stats/`)
+        .then(data => {
+            const bySeverity = data.active_incidents.by_severity || {};
+            document.getElementById('critical-count').textContent = bySeverity['CRITICAL'] || 0;
+            document.getElementById('high-count').textContent = bySeverity['HIGH'] || 0;
+            document.getElementById('total-count').textContent = data.active_incidents.total || 0;
+            document.getElementById('sla-breach-count').textContent = data.sla.breached_count || 0;
+        })
+        .catch(err => console.error('Error loading stats:', err));
+}
+
+function renderIncidentsList(incidents) {
+    const container = document.getElementById('incidents-list');
+    
+    if (!incidents.length) {
+        container.innerHTML = '<div class="text-center text-muted py-4">No active incidents</div>';
+        return;
+    }
+    
+    container.innerHTML = incidents.map(inc => `
+        <div class="incident-item severity-${inc.severity} ${selectedIncidentId === inc.id ? 'selected' : ''}" 
+             onclick="selectIncident(${inc.id})">
+            <div class="incident-header">
+                <div>
+                    <span class="severity-badge severity-${inc.severity}">${inc.severity}</span>
+                    ${inc.is_sla_breached ? '<span class="pulse-indicator critical ms-2"></span>' : ''}
+                </div>
+                <span class="status-badge">${inc.status.replace('_', ' ')}</span>
+            </div>
+            <h6 class="mb-1">${inc.title || inc.category_name || 'Incident'}</h6>
+            <small class="text-muted">${inc.location_text || 'No location'}</small>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+                <small class="text-muted">#${inc.id}</small>
+                <small class="text-muted">${formatTime(inc.created_at)}</small>
+            </div>
+        </div>
+    `).join('');
+}
+
+function updateIncidentMarkers() {
+    Object.values(markers.incidents).forEach(m => map.removeLayer(m));
+    markers.incidents = {};
+    
+    incidents.forEach(inc => {
+        if (!inc.latitude || !inc.longitude) return;
+        
+        const color = inc.severity === 'CRITICAL' ? '#ef4444' : 
+                     inc.severity === 'HIGH' ? '#f59e0b' : '#3b82f6';
+        
+        const icon = L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="background: ${color}; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>`,
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+        });
+        
+        const marker = L.marker([parseFloat(inc.latitude), parseFloat(inc.longitude)], { icon })
+            .bindPopup(`
+                <strong>${inc.title || inc.category_name}</strong><br>
+                ${inc.severity} - ${inc.status}<br>
+                <a href="#" onclick="selectIncident(${inc.id}); return false;">View Details</a>
+            `)
+            .addTo(map);
+        
+        markers.incidents[inc.id] = marker;
+    });
+}
+
+function updateResponderMarkers(responders) {
+    Object.values(markers.responders).forEach(m => map.removeLayer(m));
+    markers.responders = {};
+    
+    responders.forEach(resp => {
+        const icon = L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="background: #10b981; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+        });
+        
+        const marker = L.marker([resp.latitude, resp.longitude], { icon })
+            .bindPopup(`
+                <strong>${resp.name}</strong><br>
+                ${resp.is_available ? 'Available' : 'Busy'}
+            `)
+            .addTo(map);
+        
+        markers.responders[resp.id] = marker;
+    });
+}
+
+function updateDepartmentMarkers(departments) {
+    Object.values(markers.departments).forEach(m => map.removeLayer(m));
+    markers.departments = {};
+    
+    departments.forEach(dept => {
+        const icon = L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="background: #8b5cf6; width: 20px; height: 20px; border-radius: 4px; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>`,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+        
+        const marker = L.marker([dept.latitude, dept.longitude], { icon })
+            .bindPopup(`
+                <strong>${dept.name}</strong><br>
+                ${dept.type}<br>
+                Active: ${dept.active_incidents}/${dept.active_incidents + dept.available_capacity}
+            `)
+            .addTo(map);
+        
+        markers.departments[dept.id] = marker;
+    });
+}
+
+function selectIncident(id) {
+    selectedIncidentId = id;
+    document.querySelectorAll('.incident-item').forEach(item => {
+        item.classList.toggle('selected', item.onclick.toString().includes(id));
+    });
+    loadIncidentDetails(id);
+    const incident = incidents.find(i => i.id === id);
+    if (incident && incident.latitude && incident.longitude) {
+        map.setView([parseFloat(incident.latitude), parseFloat(incident.longitude)], 14);
+        markers.incidents[id]?.openPopup();
+    }
+}
+
+function loadIncidentDetails(id) {
+    apiRequest(`${API_BASE}/incidents/${id}/`)
+        .then(data => {
+            renderDetailPanel(data);
+            document.getElementById('detail-panel').classList.add('open');
+        })
+        .catch(err => {
+            console.error('Error loading incident details:', err);
+            showToast('Error loading details', 'error');
+        });
+}
+
+function renderDetailPanel(incident) {
+    document.getElementById('detail-title').textContent = incident.title || `Incident #${incident.id}`;
+    
+    const content = document.getElementById('detail-content');
+    content.innerHTML = `
+        <div class="detail-section">
+            <div class="d-flex gap-2 mb-3 flex-wrap">
+                <span class="severity-badge severity-${incident.severity}">${incident.severity}</span>
+                <span class="status-badge">${incident.status.replace('_', ' ')}</span>
+                ${incident.is_sla_breached ? '<span class="severity-badge severity-CRITICAL">⚠ SLA Breach</span>' : ''}
+            </div>
+            <dl class="info-grid">
+                <dt>Category</dt>
+                <dd>${incident.category_name}</dd>
+                <dt>Reported</dt>
+                <dd>${new Date(incident.created_at).toLocaleString()}</dd>
+                <dt>Reporter</dt>
+                <dd>${incident.user_username || '<em>Anonymous</em>'}</dd>
+            </dl>
+        </div>
+        
+        <div class="detail-section">
+            <h4>Description</h4>
+            <p>${incident.description}</p>
+        </div>
+        
+        <div class="detail-section">
+            <h4>Location</h4>
+            <p><strong>${incident.location_text || 'Location not specified'}</strong></p>
+            ${incident.latitude && incident.longitude ? 
+                `<a href="https://www.google.com/maps?q=${incident.latitude},${incident.longitude}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                    <i class="bi bi-geo-alt"></i> Open in Maps
+                </a>` : ''}
+        </div>
+        
+        <div class="detail-section">
+            <h4>⚡ Quick Actions</h4>
+            <div class="action-buttons">
+                ${getActionButtons(incident)}
+            </div>
+        </div>
+        
+        <div class="detail-section">
+            <h4>📍 Top 5 Nearby Departments</h4>
+            <div id="nearby-departments-list" class="nearby-dept-list">
+                <div class="loading-spinner">
+                    <div class="spinner-border spinner-border-sm me-2"></div> Loading nearby departments...
+                </div>
+            </div>
+        </div>
+        
+        <div class="detail-section">
+            <h4>✓ Current Assignments</h4>
+            <div class="assignment-list" id="assignments-list">
+                ${renderAssignments(incident.assignments || [])}
+            </div>
+        </div>
+    `;
+    
+    if (incident.latitude && incident.longitude) {
+        loadNearbyDepartments(incident.id);
+    } else {
+        document.getElementById('nearby-departments-list').innerHTML = 
+            '<div class="empty-state">No location data available</div>';
+    }
+}
+
+function loadNearbyDepartments(incidentId) {
+    apiRequest(`${API_BASE}/incidents/${incidentId}/nearby-departments/`)
+        .then(data => {
+            renderNearbyDepartments(data.departments, incidentId);
+        })
+        .catch(err => {
+            console.error('Error loading nearby departments:', err);
+            document.getElementById('nearby-departments-list').innerHTML = 
+                '<div class="empty-state">Error loading nearby departments</div>';
+        });
+}
+
+function renderNearbyDepartments(departments, incidentId) {
+    const container = document.getElementById('nearby-departments-list');
+    
+    if (!departments.length) {
+        container.innerHTML = '<div class="empty-state">No departments found nearby</div>';
+        return;
+    }
+    
+    container.innerHTML = departments.map(dept => `
+        <div class="nearby-dept-item ${dept.is_assigned ? 'assigned' : ''}">
+            <div class="nearby-dept-header">
+                <div>
+                    <div class="nearby-dept-name">${dept.name}</div>
+                    <span class="dept-type-badge">${dept.type}</span>
+                </div>
+                <span class="priority-badge priority-${dept.priority_rank}" title="Priority Rank #${dept.priority_rank}">
+                    #${dept.priority_rank}
+                </span>
+            </div>
+            <div class="nearby-dept-meta">
+                <span class="distance">📍 ${dept.distance_km} km away</span>
+                <span class="${dept.available_capacity > 0 ? 'capacity' : 'busy'}">
+                    ${dept.available_capacity > 0 ? `✓ ${dept.available_capacity} capacity` : '⚠ At capacity'}
+                </span>
+                ${dept.average_response_time ? `<span>⏱ ~${dept.average_response_time} min</span>` : ''}
+            </div>
+            ${dept.is_assigned ? 
+                `<button class="assign-dept-btn assigned" disabled>
+                    ✓ Assigned (${dept.assignment_status.replace('_', ' ')})
+                </button>` :
+                `<button class="assign-dept-btn" onclick="assignDepartment(${incidentId}, ${dept.id}, '${dept.name}')">
+                    + Assign This Department
+                </button>`
+            }
+        </div>
+    `).join('');
+}
+
+function assignDepartment(incidentId, departmentId, departmentName) {
+    if (!confirm(`Assign ${departmentName} to this incident?`)) return;
+    
+    apiRequest(`${API_BASE}/incidents/${incidentId}/assign/`, {
+        method: 'POST',
+        body: JSON.stringify({ department_ids: [departmentId] })
+    })
+    .then(data => {
+        showToast(`${departmentName} assigned successfully`, 'success');
+        loadIncidents();
+        loadIncidentDetails(incidentId);
+    })
+    .catch(err => {
+        showToast('Error assigning department', 'error');
+    });
+}
+
+function getActionButtons(incident) {
+    let buttons = '';
+    
+    if (incident.status === 'REPORTED') {
+        buttons += `<button class="action-btn primary" onclick="verifyIncident(${incident.id})">Verify Incident</button>`;
+    }
+    
+    if (incident.status === 'VERIFIED' || incident.status === 'REPORTED') {
+        buttons += `<button class="action-btn success" onclick="autoAllocate(${incident.id})">Auto-Allocate</button>`;
+    }
+    
+    buttons += `<button class="action-btn secondary" onclick="manualAssign(${incident.id})">Manual Assign</button>`;
+    buttons += `<button class="action-btn secondary" onclick="escalateIncident(${incident.id})">Escalate</button>`;
+    
+    return buttons;
+}
+
+function renderAssignments(assignments) {
+    if (!assignments.length) {
+        return '<div class="empty-state">No departments assigned yet</div>';
+    }
+    
+    const sorted = [...assignments].sort((a, b) => a.priority_rank - b.priority_rank);
+    
+    return sorted.map(a => `
+        <div class="assignment-item">
+            <div class="dept-info">
+                <span class="dept-name">${a.department_name || 'Unknown Department'}</span>
+                <span class="dept-status">${a.status.replace('_', ' ')}</span>
+            </div>
+            <span class="priority-rank">Priority #${a.priority_rank}</span>
+        </div>
+    `).join('');
+}
+
+function closeDetailPanel() {
+    document.getElementById('detail-panel').classList.remove('open');
+    selectedIncidentId = null;
+}
+
+function verifyIncident(id) {
+    apiRequest(`${API_BASE}/incidents/${id}/status/`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'VERIFIED', notes: 'Verified by department' })
+    })
+    .then(() => {
+        showToast('Incident verified and allocated', 'success');
+        loadIncidents();
+        loadIncidentDetails(id);
+    })
+    .catch(err => showToast('Error verifying incident', 'error'));
+}
+
+function autoAllocate(id) {
+    apiRequest(`${API_BASE}/incidents/${id}/assign/`, {
+        method: 'POST',
+        body: JSON.stringify({ auto_allocate: true })
+    })
+    .then(data => {
+        showToast(`Allocated to ${data.assignments?.length || 0} department(s)`, 'success');
+        loadIncidents();
+        loadIncidentDetails(id);
+    })
+    .catch(err => showToast('Error allocating incident', 'error'));
+}
+
+function manualAssign(id) {
+    apiRequest(`${API_BASE}/departments/`)
+        .then(departments => {
+            const options = departments.map(d => `${d.id}: ${d.name} (${d.type})`).join('\n');
+            const input = prompt(`Enter department ID(s) to assign (comma-separated):\n\n${options}`);
+            
+            if (!input) return;
+            
+            const deptIds = input.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+            
+            if (!deptIds.length) {
+                showToast('Invalid department IDs', 'error');
+                return;
+            }
+            
+            return apiRequest(`${API_BASE}/incidents/${id}/assign/`, {
+                method: 'POST',
+                body: JSON.stringify({ department_ids: deptIds })
+            });
+        })
+        .then(data => {
+            if (data) {
+                showToast('Departments assigned', 'success');
+                loadIncidents();
+                loadIncidentDetails(id);
+            }
+        })
+        .catch(err => showToast('Error assigning departments', 'error'));
+}
+
+function escalateIncident(id) {
+    const reason = prompt('Reason for escalation:');
+    if (!reason) return;
+    
+    apiRequest(`${API_BASE}/incidents/${id}/escalate/`, {
+        method: 'POST',
+        body: JSON.stringify({ action_type: 'ADD_DEPARTMENT', reason: reason })
+    })
+    .then(data => {
+        showToast(`Escalation: ${data.result}`, 'info');
+        loadIncidents();
+        loadIncidentDetails(id);
+    })
+    .catch(err => showToast('Error escalating incident', 'error'));
+}
+
+function applyFilters() {
+    loadIncidents();
+}
+
+function formatTime(isoString) {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diff = (now - date) / 1000 / 60;
+    
+    if (diff < 60) return `${Math.round(diff)}m ago`;
+    if (diff < 1440) return `${Math.round(diff / 60)}h ago`;
+    return date.toLocaleDateString();
+}
+
+function initSocketIO() {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+    
+    socket = io();
+    
+    socket.on('connect', () => {
+        socket.emit('authenticate', { token: token });
+    });
+    
+    socket.on('authenticated', (data) => {
+        console.log('WebSocket authenticated');
+    });
+    
+    socket.on('incident_created', (data) => {
+        showToast(`New incident: ${data.title || 'Incident #' + data.id}`, 'info');
+        loadIncidents();
+        loadStats();
+    });
+    
+    socket.on('incident_updated', (data) => {
+        loadIncidents();
+        if (selectedIncidentId === data.id) {
+            loadIncidentDetails(data.id);
+        }
+    });
+    
+    socket.on('responder_location', (data) => {
+        if (markers.responders[data.responder_id]) {
+            markers.responders[data.responder_id].setLatLng([data.latitude, data.longitude]);
+        }
+    });
+}
+</script>
+{% endblock %}
+

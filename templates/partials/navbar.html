@@ -27,10 +27,15 @@
                         <i class="bi bi-person-badge"></i> Responder Dashboard
                     </a>
                 </li>
-                <!-- Dispatcher links -->
-                <li class="nav-item" id="nav-dispatcher-dashboard" style="display: none;">
-                    <a class="nav-link" href="/dispatcher/dashboard">
+                <!-- Department links -->
+                <li class="nav-item" id="nav-department-dashboard" style="display: none;">
+                    <a class="nav-link" href="/department/dashboard">
                         <i class="bi bi-broadcast"></i> Command Center
+                    </a>
+                </li>
+                <li class="nav-item" id="nav-department-respondents" style="display: none;">
+                    <a class="nav-link" href="/department/respondents">
+                        <i class="bi bi-people"></i> Respondents
                     </a>
                 </li>
                 <!-- Admin links -->
@@ -74,11 +79,11 @@
         
         const isAdmin = userInfo.is_staff === true;
         const isResponder = userInfo.is_responder === true;
-        const isDispatcher = userInfo.is_dispatcher === true;
+        const isDepartment = userInfo.is_department === true;
         
         // Hide all role-specific links initially
         const allNavItems = ['nav-user-dashboard', 'nav-new-report', 
-                            'nav-responder-dashboard', 'nav-dispatcher-dashboard',
+                            'nav-responder-dashboard', 'nav-department-dashboard', 'nav-department-respondents',
                             'nav-admin-dashboard', 'nav-admin-users', 'nav-admin-analytics'];
         allNavItems.forEach(id => {
             const el = document.getElementById(id);
@@ -97,12 +102,12 @@
                 roleBadge.textContent = 'Admin';
                 roleBadge.className = 'badge bg-danger ms-1';
                 roleBadge.style.display = 'inline';
-            } else if (isDispatcher) {
-                roleBadge.textContent = 'Dispatcher';
+            } else if (isDepartment) {
+                roleBadge.textContent = 'Department';
                 roleBadge.className = 'badge bg-warning text-dark ms-1';
                 roleBadge.style.display = 'inline';
             } else if (isResponder) {
-                roleBadge.textContent = 'Responder';
+                roleBadge.textContent = 'Respondent';
                 roleBadge.className = 'badge bg-info ms-1';
                 roleBadge.style.display = 'inline';
             }
@@ -112,12 +117,13 @@
                 document.getElementById('nav-admin-dashboard').style.display = 'block';
                 document.getElementById('nav-admin-users').style.display = 'block';
                 document.getElementById('nav-admin-analytics').style.display = 'block';
-                document.getElementById('nav-dispatcher-dashboard').style.display = 'block';
-            } else if (isDispatcher) {
-                // Dispatcher: show command center
-                document.getElementById('nav-dispatcher-dashboard').style.display = 'block';
+                document.getElementById('nav-department-dashboard').style.display = 'block';
+            } else if (isDepartment) {
+                // Department: show command center and respondent management
+                document.getElementById('nav-department-dashboard').style.display = 'block';
+                document.getElementById('nav-department-respondents').style.display = 'block';
             } else if (isResponder) {
-                // Responder: show responder dashboard
+                // Respondent: show responder dashboard
                 document.getElementById('nav-responder-dashboard').style.display = 'block';
             } else {
                 // Regular citizen: show user links

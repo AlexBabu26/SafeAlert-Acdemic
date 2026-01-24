@@ -51,8 +51,8 @@ def responder_required(f):
     return decorated_function
 
 
-def dispatcher_required(f):
-    """Decorator to require dispatcher access (admins are NOT allowed)"""
+def department_required(f):
+    """Decorator to require department user access (admins are NOT allowed)"""
     @wraps(f)
     @jwt_required()
     def decorated_function(*args, **kwargs):
@@ -61,21 +61,21 @@ def dispatcher_required(f):
         if not user:
             return jsonify({'detail': 'Authentication credentials were not provided.'}), 401
         
-        # Only dispatchers can access (admins are explicitly excluded)
-        if not user.is_dispatcher:
-            return jsonify({'detail': 'Dispatcher access required. Admins cannot access dispatcher endpoints.'}), 403
+        # Only department users can access (admins are explicitly excluded)
+        if not user.is_department:
+            return jsonify({'detail': 'Department access required. Admins cannot access department endpoints.'}), 403
         
-        # Ensure dispatcher has a department assigned
+        # Ensure department user has a department assigned
         if not user.department_id:
-            return jsonify({'detail': 'Dispatcher must be assigned to a department.'}), 403
+            return jsonify({'detail': 'Department user must be assigned to a department.'}), 403
         
         return f(user, *args, **kwargs)
     
     return decorated_function
 
 
-def dispatcher_or_admin_required(f):
-    """Decorator to require dispatcher or admin access (for read-only operations)"""
+def department_or_admin_required(f):
+    """Decorator to require department or admin access (for read-only operations)"""
     @wraps(f)
     @jwt_required()
     def decorated_function(*args, **kwargs):
@@ -84,12 +84,12 @@ def dispatcher_or_admin_required(f):
         if not user:
             return jsonify({'detail': 'Authentication credentials were not provided.'}), 401
         
-        if not user.is_dispatcher and not user.is_staff:
-            return jsonify({'detail': 'Dispatcher or admin access required.'}), 403
+        if not user.is_department and not user.is_staff:
+            return jsonify({'detail': 'Department or admin access required.'}), 403
         
-        # If dispatcher, ensure they have a department
-        if user.is_dispatcher and not user.department_id:
-            return jsonify({'detail': 'Dispatcher must be assigned to a department.'}), 403
+        # If department user, ensure they have a department
+        if user.is_department and not user.department_id:
+            return jsonify({'detail': 'Department user must be assigned to a department.'}), 403
         
         return f(user, *args, **kwargs)
     
@@ -112,8 +112,8 @@ def assignment_owner_required(f):
             if not assignment:
                 return jsonify({'detail': 'Assignment not found.'}), 404
             
-            # Dispatchers and admins can access any assignment
-            if user.is_dispatcher or user.is_staff:
+            # Department users and admins can access any assignment
+            if user.is_department or user.is_staff:
                 return f(user, assignment, *args, **kwargs)
             
             # Responder must be in the assigned department
@@ -144,8 +144,8 @@ def owner_required(f):
             if not incident:
                 return jsonify({'detail': 'Not found.'}), 404
             
-            # Admin, dispatcher can access any incident
-            if user.is_staff or user.is_dispatcher:
+            # Admin, department user can access any incident
+            if user.is_staff or user.is_department:
                 return f(user, *args, **kwargs)
             
             # Responder can access incidents assigned to their department
@@ -168,11 +168,11 @@ def can_view_incident(incident_id, user):
     if not incident:
         return False, jsonify({'detail': 'Not found.'}), 404
     
-    # Admin/dispatcher can view all
-    if user.is_staff or user.is_dispatcher:
+    # Admin/department user can view all
+    if user.is_staff or user.is_department:
         return True, None, None
     
-    # Responder can view incidents assigned to their department
+    # Respondent can view incidents assigned to their department
     if user.is_responder and user.department_id:
         if incident.assignments.filter_by(department_id=user.department_id).first():
             return True, None, None
@@ -190,11 +190,11 @@ def can_view_incident_messages(incident_id, user):
     if not incident:
         return False, jsonify({'detail': 'Not found.'}), 404
     
-    # Admin/dispatcher can view all
-    if user.is_staff or user.is_dispatcher:
+    # Admin/department user can view all
+    if user.is_staff or user.is_department:
         return True, None, None
     
-    # Responder can view messages for incidents assigned to their department
+    # Respondent can view messages for incidents assigned to their department
     if user.is_responder and user.department_id:
         if incident.assignments.filter_by(department_id=user.department_id).first():
             return True, None, None
@@ -212,11 +212,11 @@ def can_send_message(incident_id, user):
     if not incident:
         return False, jsonify({'detail': 'Not found.'}), 404
     
-    # Admin/dispatcher can always send
-    if user.is_staff or user.is_dispatcher:
+    # Admin/department user can always send
+    if user.is_staff or user.is_department:
         return True, None, None
     
-    # Responder can send to incidents assigned to their department
+    # Respondent can send to incidents assigned to their department
     if user.is_responder and user.department_id:
         if incident.assignments.filter_by(department_id=user.department_id).first():
             return True, None, None

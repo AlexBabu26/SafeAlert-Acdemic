@@ -49,8 +49,8 @@ function redirectBasedOnRole(userInfo) {
     
     if (userInfo.is_staff) {
         window.location.href = '/admin/dashboard';
-    } else if (userInfo.is_dispatcher) {
-        window.location.href = '/dispatcher/dashboard';
+    } else if (userInfo.is_department) {
+        window.location.href = '/department/dashboard';
     } else if (userInfo.is_responder) {
         window.location.href = '/responder/dashboard';
     } else {

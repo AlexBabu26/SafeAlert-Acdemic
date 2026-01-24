@@ -14,7 +14,10 @@ bp = Blueprint('auth', __name__)
 
 @bp.route('/register/', methods=['POST'])
 def register():
-    """User registration endpoint - supports citizen and responder registration"""
+    """User registration endpoint - supports citizen, responder, and department registration
+    
+    All users require admin approval before they can login.
+    """
     if not request.is_json:
         return jsonify({'detail': 'JSON data required.'}), 400
     
@@ -33,14 +36,16 @@ def register():
     if data.get('email') and User.query.filter_by(email=data['email']).first():
         return jsonify({'email': ['A user with that email already exists.']}), 400
     
-    # Validate department if responder
     role = data.get('role', 'citizen')
-    if role == 'responder':
+    department = None
+    
+    # Validate department if responder or department user
+    if role in ['responder', 'department']:
         department = Department.query.get(data.get('department_id'))
         if not department:
             return jsonify({'department_id': ['Invalid department selected.']}), 400
     
-    # Create user
+    # Create user based on role
     user = User(
         username=data['username'],
         email=data.get('email', ''),
@@ -48,26 +53,22 @@ def register():
         last_name=data.get('last_name', ''),
         phone_number=data.get('phone_number', ''),
         is_responder=(role == 'responder'),
-        department_id=data.get('department_id') if role == 'responder' else None,
+        is_department=(role == 'department'),
+        department_id=data.get('department_id') if role in ['responder', 'department'] else None,
         badge_number=data.get('badge_number') if role == 'responder' else None,
-        is_active=True,  # Citizens are active by default, responders need admin approval
+        is_active=False,  # All users need admin approval
         # Location fields
         home_address=data.get('home_address'),
         home_latitude=data.get('home_latitude'),
         home_longitude=data.get('home_longitude'),
     )
     
-    # Responders need admin approval - set inactive by default
-    if role == 'responder':
-        user.is_active = False  # Responders need admin approval
-        
-        # If responder didn't provide location, use department headquarters as default
-        if not user.home_latitude and data.get('department_id'):
-            department = Department.query.get(data.get('department_id'))
-            if department:
-                user.home_latitude = department.headquarters_lat
-                user.home_longitude = department.headquarters_lng
-                user.home_address = department.address or f"{department.name} Location"
+    # If responder/department didn't provide location, use department headquarters as default
+    if role in ['responder', 'department'] and department:
+        if not user.home_latitude:
+            user.home_latitude = department.headquarters_lat
+            user.home_longitude = department.headquarters_lng
+            user.home_address = department.address or f"{department.name} Location"
     
     user.set_password(data['password'])
     
@@ -76,21 +77,17 @@ def register():
     
     user_schema = UserSchema()
     
-    # For responders, don't return tokens (they need activation first)
-    if role == 'responder':
-        return jsonify({
-            'user': user_schema.dump(user),
-            'message': 'Your responder account has been created and is pending approval. You will be notified once your account is activated by an administrator.',
-        }), 201
-    
-    # For citizens, return tokens immediately
-    access_token = create_access_token(identity=str(user.id))
-    refresh_token = create_refresh_token(identity=str(user.id))
+    # Return appropriate message based on role
+    role_messages = {
+        'citizen': 'Your account has been created and is pending approval. You will be notified once your account is activated by an administrator.',
+        'responder': 'Your respondent account has been created and is pending approval. You will be notified once your account is activated.',
+        'department': 'Your department account has been created and is pending approval. You will be notified once your account is activated by an administrator.',
+    }
     
     return jsonify({
         'user': user_schema.dump(user),
-        'access': access_token,
-        'refresh': refresh_token,
+        'message': role_messages.get(role, role_messages['citizen']),
+        'pending_approval': True,
     }), 201
 
 
@@ -185,7 +182,7 @@ def login():
     
     # Check if user account is active
     if not user.is_active:
-        return jsonify({'detail': 'Your account has been deactivated. Please contact an administrator.'}), 403
+        return jsonify({'detail': 'Your account is pending approval or has been deactivated. Please contact an administrator.'}), 403
     
     # Update last login
     user.last_login = datetime.utcnow()

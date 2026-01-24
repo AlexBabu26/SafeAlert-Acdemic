@@ -60,8 +60,8 @@ def handle_authenticate(data):
     # Join role-specific rooms
     if user.is_staff:
         join_room('admins')
-    if user.is_dispatcher:
-        join_room('dispatchers')
+    if user.is_department:
+        join_room('departments')
     if user.is_responder:
         join_room('responders')
         if user.department_id:

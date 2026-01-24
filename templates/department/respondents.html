@@ -1,0 +1,540 @@
+{% extends 'base.html' %}
+
+{% block title %}Respondent Management - SafeAlert{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #1e3a5f;
+        --accent-color: #ff6b35;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --text-primary: #1e293b;
+        --text-secondary: #475569;
+        --text-muted: #64748b;
+        --bg-light: #f8fafc;
+        --border-color: #e2e8f0;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, var(--primary-color), #2d4a6f);
+        color: white;
+        padding: 2rem;
+        margin: -1rem -1rem 2rem -1rem;
+    }
+
+    .page-header h1 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .stats-row {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        flex: 1;
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .stat-card.success { border-left-color: var(--success-color); }
+    .stat-card.warning { border-left-color: var(--warning-color); }
+    .stat-card.danger { border-left-color: var(--danger-color); }
+
+    .stat-card .value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .stat-card .label {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+
+    .filter-bar {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .filter-bar input,
+    .filter-bar select {
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 0.9rem;
+    }
+
+    .filter-bar input:focus,
+    .filter-bar select:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+    }
+
+    .filter-bar input {
+        flex: 1;
+    }
+
+    .respondents-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .respondent-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+    }
+
+    .respondent-card:hover {
+        border-color: var(--accent-color);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+
+    .respondent-card.inactive {
+        opacity: 0.7;
+        background: var(--bg-light);
+    }
+
+    .respondent-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .respondent-avatar {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, var(--primary-color), #2d4a6f);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .respondent-name {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .respondent-username {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+
+    .status-indicators {
+        display: flex;
+        gap: 0.5rem;
+        margin: 1rem 0;
+    }
+
+    .status-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-badge.active { background: #dcfce7; color: #16a34a; }
+    .status-badge.inactive { background: #fee2e2; color: #dc2626; }
+    .status-badge.on-duty { background: #dbeafe; color: #2563eb; }
+    .status-badge.off-duty { background: #f3f4f6; color: #6b7280; }
+    .status-badge.available { background: #ecfdf5; color: #059669; }
+    .status-badge.busy { background: #fef3c7; color: #d97706; }
+
+    .respondent-info {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.5rem 1rem;
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .respondent-info dt {
+        color: var(--text-muted);
+    }
+
+    .respondent-info dd {
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    .respondent-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .action-btn {
+        flex: 1;
+        padding: 0.625rem 0.75rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .action-btn.primary {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    .action-btn.primary:hover {
+        background: #e55a2b;
+    }
+
+    .action-btn.success {
+        background: var(--success-color);
+        color: white;
+    }
+
+    .action-btn.success:hover {
+        background: #059669;
+    }
+
+    .action-btn.danger {
+        background: var(--danger-color);
+        color: white;
+    }
+
+    .action-btn.danger:hover {
+        background: #dc2626;
+    }
+
+    .action-btn.secondary {
+        background: var(--bg-light);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+    }
+
+    .action-btn.secondary:hover {
+        background: #f1f5f9;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-muted);
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+
+    .pending-section {
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .pending-section h3 {
+        color: #ea580c;
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .stats-row {
+            flex-direction: column;
+        }
+        
+        .filter-bar {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Respondent Management</h1>
+    <p class="mb-0 opacity-75">Manage and monitor respondents in your department</p>
+</div>
+
+<div class="container-fluid">
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="value" id="total-respondents">0</div>
+            <div class="label">Total Respondents</div>
+        </div>
+        <div class="stat-card success">
+            <div class="value" id="on-duty-count">0</div>
+            <div class="label">On Duty</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="value" id="available-count">0</div>
+            <div class="label">Available</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="value" id="pending-count">0</div>
+            <div class="label">Pending Approval</div>
+        </div>
+    </div>
+
+    <!-- Pending Approvals Section -->
+    <div class="pending-section" id="pending-section" style="display: none;">
+        <h3>⚠️ Pending Approvals</h3>
+        <div class="respondents-grid" id="pending-list"></div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+        <input type="text" id="search-input" placeholder="Search respondents..." onkeyup="filterRespondents()">
+        <select id="status-filter" onchange="filterRespondents()">
+            <option value="">All Status</option>
+            <option value="active">Active Only</option>
+            <option value="inactive">Inactive Only</option>
+        </select>
+        <select id="duty-filter" onchange="filterRespondents()">
+            <option value="">All Duty Status</option>
+            <option value="on_duty">On Duty</option>
+            <option value="off_duty">Off Duty</option>
+        </select>
+    </div>
+
+    <!-- Respondents Grid -->
+    <div class="respondents-grid" id="respondents-list">
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const API_BASE = '/api/department';
+let allRespondents = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadRespondents();
+    loadPendingRespondents();
+});
+
+function loadRespondents() {
+    apiRequest(`${API_BASE}/respondents/`)
+        .then(data => {
+            allRespondents = data.results || [];
+            renderRespondents(allRespondents);
+            updateStats();
+        })
+        .catch(err => {
+            console.error('Error loading respondents:', err);
+            document.getElementById('respondents-list').innerHTML = 
+                '<div class="empty-state">Error loading respondents</div>';
+        });
+}
+
+function loadPendingRespondents() {
+    apiRequest(`${API_BASE}/respondents/pending/`)
+        .then(data => {
+            const pending = data.results || [];
+            document.getElementById('pending-count').textContent = pending.length;
+            
+            if (pending.length > 0) {
+                document.getElementById('pending-section').style.display = 'block';
+                renderPendingRespondents(pending);
+            } else {
+                document.getElementById('pending-section').style.display = 'none';
+            }
+        })
+        .catch(err => console.error('Error loading pending respondents:', err));
+}
+
+function renderRespondents(respondents) {
+    const container = document.getElementById('respondents-list');
+    
+    if (!respondents.length) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="bi bi-people"></i>
+                <h5>No Respondents Found</h5>
+                <p>No respondents match your current filters.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = respondents.map(resp => renderRespondentCard(resp, false)).join('');
+}
+
+function renderPendingRespondents(respondents) {
+    const container = document.getElementById('pending-list');
+    container.innerHTML = respondents.map(resp => renderRespondentCard(resp, true)).join('');
+}
+
+function renderRespondentCard(resp, isPending) {
+    const initials = getInitials(resp.first_name, resp.last_name, resp.username);
+    
+    return `
+        <div class="respondent-card ${!resp.is_active ? 'inactive' : ''}">
+            <div class="respondent-header">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="respondent-avatar">${initials}</div>
+                    <div>
+                        <div class="respondent-name">${resp.first_name || ''} ${resp.last_name || resp.username}</div>
+                        <div class="respondent-username">@${resp.username}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="status-indicators">
+                <span class="status-badge ${resp.is_active ? 'active' : 'inactive'}">
+                    ${resp.is_active ? 'Active' : 'Inactive'}
+                </span>
+                ${resp.is_active ? `
+                    <span class="status-badge ${resp.is_on_duty ? 'on-duty' : 'off-duty'}">
+                        ${resp.is_on_duty ? 'On Duty' : 'Off Duty'}
+                    </span>
+                    ${resp.is_on_duty ? `
+                        <span class="status-badge ${resp.is_available ? 'available' : 'busy'}">
+                            ${resp.is_available ? 'Available' : 'Busy'}
+                        </span>
+                    ` : ''}
+                ` : ''}
+            </div>
+            
+            <dl class="respondent-info">
+                ${resp.email ? `<dt>Email</dt><dd>${resp.email}</dd>` : ''}
+                ${resp.phone_number ? `<dt>Phone</dt><dd>${resp.phone_number}</dd>` : ''}
+                ${resp.badge_number ? `<dt>Badge</dt><dd>${resp.badge_number}</dd>` : ''}
+                <dt>Joined</dt><dd>${new Date(resp.date_joined).toLocaleDateString()}</dd>
+            </dl>
+            
+            <div class="respondent-actions">
+                ${isPending ? `
+                    <button class="action-btn success" onclick="activateRespondent(${resp.id}, '${resp.username}')">
+                        ✓ Approve
+                    </button>
+                ` : resp.is_active ? `
+                    <button class="action-btn secondary" onclick="viewRespondent(${resp.id})">
+                        View
+                    </button>
+                    <button class="action-btn danger" onclick="deactivateRespondent(${resp.id}, '${resp.username}')">
+                        Deactivate
+                    </button>
+                ` : `
+                    <button class="action-btn success" onclick="activateRespondent(${resp.id}, '${resp.username}')">
+                        Activate
+                    </button>
+                `}
+            </div>
+        </div>
+    `;
+}
+
+function getInitials(firstName, lastName, username) {
+    if (firstName && lastName) {
+        return (firstName[0] + lastName[0]).toUpperCase();
+    }
+    return username.substring(0, 2).toUpperCase();
+}
+
+function updateStats() {
+    const total = allRespondents.length;
+    const onDuty = allRespondents.filter(r => r.is_on_duty).length;
+    const available = allRespondents.filter(r => r.is_on_duty && r.is_available).length;
+    
+    document.getElementById('total-respondents').textContent = total;
+    document.getElementById('on-duty-count').textContent = onDuty;
+    document.getElementById('available-count').textContent = available;
+}
+
+function filterRespondents() {
+    const search = document.getElementById('search-input').value.toLowerCase();
+    const statusFilter = document.getElementById('status-filter').value;
+    const dutyFilter = document.getElementById('duty-filter').value;
+    
+    const filtered = allRespondents.filter(resp => {
+        // Search filter
+        const searchMatch = !search || 
+            resp.username.toLowerCase().includes(search) ||
+            (resp.first_name && resp.first_name.toLowerCase().includes(search)) ||
+            (resp.last_name && resp.last_name.toLowerCase().includes(search)) ||
+            (resp.badge_number && resp.badge_number.toLowerCase().includes(search));
+        
+        // Status filter
+        const statusMatch = !statusFilter || 
+            (statusFilter === 'active' && resp.is_active) ||
+            (statusFilter === 'inactive' && !resp.is_active);
+        
+        // Duty filter
+        const dutyMatch = !dutyFilter ||
+            (dutyFilter === 'on_duty' && resp.is_on_duty) ||
+            (dutyFilter === 'off_duty' && !resp.is_on_duty);
+        
+        return searchMatch && statusMatch && dutyMatch;
+    });
+    
+    renderRespondents(filtered);
+}
+
+function activateRespondent(id, username) {
+    if (!confirm(`Activate respondent ${username}?`)) return;
+    
+    apiRequest(`${API_BASE}/respondents/${id}/activate/`, { method: 'POST' })
+        .then(data => {
+            showToast(`${username} has been activated`, 'success');
+            loadRespondents();
+            loadPendingRespondents();
+        })
+        .catch(err => {
+            showToast('Error activating respondent', 'error');
+        });
+}
+
+function deactivateRespondent(id, username) {
+    if (!confirm(`Deactivate respondent ${username}? They will no longer be able to login.`)) return;
+    
+    apiRequest(`${API_BASE}/respondents/${id}/deactivate/`, { method: 'POST' })
+        .then(data => {
+            showToast(`${username} has been deactivated`, 'success');
+            loadRespondents();
+        })
+        .catch(err => {
+            showToast('Error deactivating respondent', 'error');
+        });
+}
+
+function viewRespondent(id) {
+    apiRequest(`${API_BASE}/respondents/${id}/`)
+        .then(data => {
+            // Could show a modal with details
+            alert(`Respondent: ${data.username}\nActive Assignments: ${data.stats?.active_assignments || 0}\nCompleted Today: ${data.stats?.completed_today || 0}`);
+        })
+        .catch(err => showToast('Error loading respondent details', 'error'));
+}
+</script>
+{% endblock %}
+

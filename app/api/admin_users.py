@@ -33,14 +33,14 @@ def list_users(user):
     # Role filter
     if role == 'admin':
         query = query.filter(User.is_staff == True)
-    elif role == 'dispatcher':
-        query = query.filter(User.is_dispatcher == True)
+    elif role == 'department':
+        query = query.filter(User.is_department == True)
     elif role == 'responder':
         query = query.filter(User.is_responder == True)
     elif role == 'citizen':
         query = query.filter(
             User.is_staff == False,
-            User.is_dispatcher == False,
+            User.is_department == False,
             User.is_responder == False
         )
     
@@ -95,11 +95,11 @@ def user_stats(user):
     
     # Count by role
     admins = User.query.filter_by(is_staff=True).count()
-    dispatchers = User.query.filter_by(is_dispatcher=True).count()
+    departments = User.query.filter_by(is_department=True).count()
     responders = User.query.filter_by(is_responder=True).count()
     citizens = User.query.filter(
         User.is_staff == False,
-        User.is_dispatcher == False,
+        User.is_department == False,
         User.is_responder == False
     ).count()
     
@@ -115,17 +115,36 @@ def user_stats(user):
         User.is_on_duty == True
     ).count()
     
+    # Pending department users
+    pending_departments = User.query.filter(
+        User.is_department == True,
+        User.is_active == False
+    ).count()
+    
+    # Pending citizens
+    pending_citizens = User.query.filter(
+        User.is_staff == False,
+        User.is_department == False,
+        User.is_responder == False,
+        User.is_active == False
+    ).count()
+    
     return jsonify({
         'total': total_users,
         'active': active_users,
         'inactive': inactive_users,
         'by_role': {
             'admins': admins,
-            'dispatchers': dispatchers,
+            'departments': departments,
             'responders': responders,
             'citizens': citizens
         },
-        'pending_responders': pending_responders,
+        'pending': {
+            'responders': pending_responders,
+            'departments': pending_departments,
+            'citizens': pending_citizens,
+            'total': pending_responders + pending_departments + pending_citizens
+        },
         'responders_on_duty': responders_on_duty
     }), 200
 
