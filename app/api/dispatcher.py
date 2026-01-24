@@ -269,6 +269,77 @@ def escalate_incident(user, id):
     }), 200
 
 
+@bp.route('/incidents/<int:id>/nearby-departments/', methods=['GET'])
+@dispatcher_required
+def get_nearby_departments_for_incident(user, id):
+    """Get top 5 nearby departments for an incident with distance and priority"""
+    incident = IncidentReport.query.get(id)
+    
+    if not incident:
+        return jsonify({'detail': 'Not found.'}), 404
+    
+    if not incident.latitude or not incident.longitude:
+        return jsonify({'detail': 'Incident has no location data.'}), 400
+    
+    # Get nearby departments sorted by distance
+    radius_km = request.args.get('radius', 50.0, type=float)
+    limit = request.args.get('limit', 5, type=int)
+    
+    nearby = get_nearby_departments(
+        float(incident.latitude),
+        float(incident.longitude),
+        radius_km=radius_km
+    )
+    
+    # Get existing assignments for this incident
+    existing_assignments = {
+        a.department_id: a for a in incident.assignments.all()
+    }
+    
+    results = []
+    for idx, (dept, distance_km) in enumerate(nearby[:limit]):
+        assignment = existing_assignments.get(dept.id)
+        
+        # Calculate a priority score (lower is better)
+        # Based on: distance, capacity, response time
+        priority_score = (
+            distance_km * 10 +  # Distance factor
+            (dept.current_active_incidents / max(dept.max_concurrent_incidents, 1)) * 50 +  # Load factor
+            (dept.average_response_time_minutes or 30)  # Response time factor
+        )
+        
+        results.append({
+            'id': dept.id,
+            'name': dept.name,
+            'code': dept.code,
+            'type': dept.type,
+            'distance_km': round(distance_km, 2),
+            'priority_rank': idx + 1,
+            'priority_score': round(priority_score, 1),
+            'headquarters_lat': float(dept.headquarters_lat),
+            'headquarters_lng': float(dept.headquarters_lng),
+            'contact_phone': dept.contact_phone,
+            'current_active_incidents': dept.current_active_incidents,
+            'max_concurrent_incidents': dept.max_concurrent_incidents,
+            'available_capacity': dept.available_capacity,
+            'average_response_time': dept.average_response_time_minutes,
+            'is_assigned': assignment is not None,
+            'assignment_status': assignment.status if assignment else None,
+            'assignment_priority': assignment.priority_rank if assignment else None,
+        })
+    
+    return jsonify({
+        'incident_id': incident.id,
+        'incident_location': {
+            'latitude': float(incident.latitude),
+            'longitude': float(incident.longitude),
+            'text': incident.location_text
+        },
+        'departments': results,
+        'total_found': len(nearby)
+    }), 200
+
+
 @bp.route('/map/', methods=['GET'])
 @dispatcher_required
 def get_map_data(user):

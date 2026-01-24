@@ -294,6 +294,33 @@ main {
     border-radius: var(--sa-radius);
     border-color: var(--sa-border);
     box-shadow: var(--sa-shadow);
+    background: var(--sa-surface);
+}
+
+.toast-header {
+    background: var(--sa-surface);
+    border-bottom: 1px solid var(--sa-border);
+}
+
+.toast-body {
+    color: var(--sa-text);
+}
+
+/* Ensure toast title colors have good contrast */
+.toast-header .text-info {
+    color: #0891b2 !important; /* darker cyan for readability */
+}
+
+.toast-header .text-success {
+    color: #16a34a !important;
+}
+
+.toast-header .text-warning {
+    color: #d97706 !important;
+}
+
+.toast-header .text-danger {
+    color: #dc2626 !important;
 }
 
 .loader-overlay {
