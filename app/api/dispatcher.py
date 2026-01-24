@@ -27,6 +27,10 @@ from app.utils.permissions import dispatcher_required, dispatcher_or_admin_requi
 from app.services.allocation import AllocationService, get_nearby_departments
 from app.services.escalation import EscalationService
 from app.services.notification import NotificationService
+from app.services.dispatcher_analytics import (
+    get_dispatcher_summary_stats,
+    get_dispatcher_timeseries_data
+)
 from app.socketio_events import broadcast_incident_updated, broadcast_assignment_created, broadcast_safety_alert
 
 bp = Blueprint('dispatcher', __name__)
@@ -577,4 +581,34 @@ def get_stats(user):
             'breached_count': sla_breached_count,
         }
     }), 200
+
+
+@bp.route('/analytics/summary/', methods=['GET'])
+@dispatcher_required
+def dispatcher_analytics_summary(user):
+    """Get analytics summary for dispatcher's department only"""
+    if not user.department_id:
+        return jsonify({'detail': 'Dispatcher must be assigned to a department.'}), 400
+    
+    stats = get_dispatcher_summary_stats(user.department_id)
+    return jsonify(stats), 200
+
+
+@bp.route('/analytics/timeseries/', methods=['GET'])
+@dispatcher_required
+def dispatcher_analytics_timeseries(user):
+    """Get analytics time series data for dispatcher's department only"""
+    if not user.department_id:
+        return jsonify({'detail': 'Dispatcher must be assigned to a department.'}), 400
+    
+    days = request.args.get('days', 30, type=int)
+    
+    # Limit to 1 year
+    if days > 365:
+        days = 365
+    if days < 1:
+        days = 1
+    
+    data = get_dispatcher_timeseries_data(user.department_id, days=days)
+    return jsonify(data), 200
 

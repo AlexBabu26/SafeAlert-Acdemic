@@ -39,7 +39,8 @@ def register_commands(app):
     @click.option('--username', prompt=True, help='Dispatcher username')
     @click.option('--email', prompt=True, help='Dispatcher email')
     @click.option('--password', prompt=True, hide_input=True, confirmation_prompt=True, help='Password')
-    def create_dispatcher(username, email, password):
+    @click.option('--department-id', prompt=True, type=int, help='Department ID this dispatcher belongs to')
+    def create_dispatcher(username, email, password, department_id):
         """Create a dispatcher user"""
         if User.query.filter_by(username=username).first():
             click.echo(f'Error: User "{username}" already exists.')
@@ -49,10 +50,20 @@ def register_commands(app):
             click.echo(f'Error: User with email "{email}" already exists.')
             return
         
+        # Validate department
+        department = Department.query.get(department_id)
+        if not department:
+            click.echo(f'Error: Department with ID {department_id} not found.')
+            click.echo('Available departments:')
+            for dept in Department.query.all():
+                click.echo(f'  - {dept.id}: {dept.name} ({dept.code})')
+            return
+        
         user = User(
             username=username,
             email=email,
-            is_dispatcher=True
+            is_dispatcher=True,
+            department_id=department_id  # Add department assignment
         )
         user.set_password(password)
         
@@ -60,6 +71,7 @@ def register_commands(app):
         db.session.commit()
         
         click.echo(f'Successfully created dispatcher user: {username}')
+        click.echo(f'Assigned to department: {department.name} ({department.code})')
     
     @app.cli.command('create-responder')
     @click.option('--username', prompt=True, help='Responder username')

@@ -52,7 +52,7 @@ def responder_required(f):
 
 
 def dispatcher_required(f):
-    """Decorator to require dispatcher access"""
+    """Decorator to require dispatcher access (admins are NOT allowed)"""
     @wraps(f)
     @jwt_required()
     def decorated_function(*args, **kwargs):
@@ -61,8 +61,13 @@ def dispatcher_required(f):
         if not user:
             return jsonify({'detail': 'Authentication credentials were not provided.'}), 401
         
-        if not user.is_dispatcher and not user.is_staff:
-            return jsonify({'detail': 'Dispatcher access required.'}), 403
+        # Only dispatchers can access (admins are explicitly excluded)
+        if not user.is_dispatcher:
+            return jsonify({'detail': 'Dispatcher access required. Admins cannot access dispatcher endpoints.'}), 403
+        
+        # Ensure dispatcher has a department assigned
+        if not user.department_id:
+            return jsonify({'detail': 'Dispatcher must be assigned to a department.'}), 403
         
         return f(user, *args, **kwargs)
     
@@ -70,7 +75,7 @@ def dispatcher_required(f):
 
 
 def dispatcher_or_admin_required(f):
-    """Decorator to require dispatcher or admin access"""
+    """Decorator to require dispatcher or admin access (for read-only operations)"""
     @wraps(f)
     @jwt_required()
     def decorated_function(*args, **kwargs):
@@ -81,6 +86,10 @@ def dispatcher_or_admin_required(f):
         
         if not user.is_dispatcher and not user.is_staff:
             return jsonify({'detail': 'Dispatcher or admin access required.'}), 403
+        
+        # If dispatcher, ensure they have a department
+        if user.is_dispatcher and not user.department_id:
+            return jsonify({'detail': 'Dispatcher must be assigned to a department.'}), 403
         
         return f(user, *args, **kwargs)
     

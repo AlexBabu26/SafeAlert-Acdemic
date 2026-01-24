@@ -4,15 +4,20 @@ Analytics API endpoints
 from flask import Blueprint, request, jsonify
 
 from app.services.analytics import get_summary_stats, get_timeseries_data
-from app.utils.permissions import admin_required
+from app.services.dispatcher_analytics import (
+    get_dispatcher_summary_stats,
+    get_dispatcher_timeseries_data
+)
+from app.utils.permissions import admin_required, dispatcher_required
 
 bp = Blueprint('analytics', __name__)
 
 
+# Admin analytics endpoints (all data)
 @bp.route('/summary/', methods=['GET'])
 @admin_required
 def summary(user):
-    """Get summary statistics (admin only)"""
+    """Get summary statistics (admin only - all data)"""
     stats = get_summary_stats()
     return jsonify(stats), 200
 
@@ -20,7 +25,7 @@ def summary(user):
 @bp.route('/timeseries/', methods=['GET'])
 @admin_required
 def timeseries(user):
-    """Get time series data (admin only)"""
+    """Get time series data (admin only - all data)"""
     days = request.args.get('days', 30, type=int)
     
     # Limit to 1 year
@@ -31,5 +36,7 @@ def timeseries(user):
     
     data = get_timeseries_data(days=days)
     return jsonify(data), 200
+
+
 
 
