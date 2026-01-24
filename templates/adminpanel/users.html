@@ -181,6 +181,8 @@
     .modal-content {
         border-radius: 16px;
         border: none;
+        background: #1e293b;
+        color: #e2e8f0;
     }
 
     .modal-header {
@@ -191,6 +193,49 @@
 
     .modal-header .btn-close {
         filter: invert(1);
+    }
+
+    .modal-body .form-label {
+        color: #94a3b8;
+        font-weight: 500;
+    }
+
+    .modal-body .form-control,
+    .modal-body .form-select {
+        background: #334155;
+        border: 1px solid #475569;
+        color: #f1f5f9;
+    }
+
+    .modal-body .form-control:disabled {
+        background: #1e293b;
+        color: #94a3b8;
+        border-color: #334155;
+    }
+
+    .modal-body .form-control:focus,
+    .modal-body .form-select:focus {
+        background: #334155;
+        border-color: #ff6b35;
+        color: #f1f5f9;
+        box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.25);
+    }
+
+    .modal-body .form-check-label {
+        color: #e2e8f0;
+    }
+
+    .modal-body h6 {
+        color: #94a3b8;
+    }
+
+    .modal-body hr {
+        border-color: #475569;
+    }
+
+    .modal-footer {
+        background: #1e293b;
+        border-top: 1px solid #334155;
     }
 </style>
 {% endblock %}
