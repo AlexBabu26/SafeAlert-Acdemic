@@ -105,10 +105,9 @@ def create_incident():
         ip_address=request.remote_addr,
     )
     
-    # Generate tracking code for anonymous reports
-    if is_anonymous:
-        from app.models.incident import generate_tracking_code
-        incident.anonymous_tracking_code = generate_tracking_code()
+    # Generate tracking code for ALL reports (not just anonymous)
+    from app.models.incident import generate_tracking_code
+    incident.anonymous_tracking_code = generate_tracking_code()
     
     db.session.add(incident)
     db.session.commit()
@@ -124,10 +123,12 @@ def create_incident():
     response_schema = IncidentReportSchema()
     response_data = response_schema.dump(incident)
     
-    # Include tracking code for anonymous reports
+    # Always include tracking code (for both anonymous and authenticated users)
+    response_data['tracking_code'] = incident.anonymous_tracking_code
     if is_anonymous:
-        response_data['tracking_code'] = incident.anonymous_tracking_code
-        response_data['message'] = 'Your anonymous report has been submitted. Use the tracking code to check status.'
+        response_data['message'] = 'Your anonymous report has been submitted. Save your tracking code to check status later.'
+    else:
+        response_data['message'] = 'Your report has been submitted successfully. You can track it using the tracking code or from your dashboard.'
     
     return jsonify(response_data), 201
 
@@ -167,6 +168,8 @@ def quick_report():
         return jsonify({'detail': 'No categories available.'}), 400
     
     # Create quick incident
+    from app.models.incident import generate_tracking_code
+    
     incident = IncidentReport(
         user_id=user.id,
         category_id=category_id,
@@ -175,6 +178,7 @@ def quick_report():
         description=data.get('description', 'Emergency assistance requested'),
         latitude=data.get('latitude'),
         longitude=data.get('longitude'),
+        anonymous_tracking_code=generate_tracking_code(),
         status='REPORTED',
         source='QUICK',
         ip_address=request.remote_addr,

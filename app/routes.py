@@ -139,8 +139,28 @@ def admin_users():
 
 @bp.route('/static/<path:filename>')
 def static_files(filename):
-    """Serve static files"""
-    return send_from_directory(current_app.config.get('STATIC_FOLDER', 'static'), filename)
+    """Serve static files with correct MIME types"""
+    from flask import make_response
+    import mimetypes
+    
+    response = make_response(
+        send_from_directory(current_app.config.get('STATIC_FOLDER', 'static'), filename)
+    )
+    
+    # Set correct MIME type for JavaScript files
+    if filename.endswith('.js'):
+        response.headers['Content-Type'] = 'application/javascript; charset=utf-8'
+    elif filename.endswith('.json'):
+        response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    elif filename.endswith('.css'):
+        response.headers['Content-Type'] = 'text/css; charset=utf-8'
+    else:
+        # Let Flask/mimetypes handle other file types
+        mimetype, _ = mimetypes.guess_type(filename)
+        if mimetype:
+            response.headers['Content-Type'] = mimetype
+    
+    return response
 
 
 @bp.route('/media/<path:filename>')

@@ -72,7 +72,7 @@ def handle_authenticate(data):
         'username': user.username,
         'roles': {
             'is_staff': user.is_staff,
-            'is_dispatcher': user.is_dispatcher,
+            'is_department': user.is_department,
             'is_responder': user.is_responder
         }
     })
@@ -107,7 +107,7 @@ def handle_join_incident(data):
     # Check permission: owner, assigned responder, dispatcher, or admin
     can_access = (
         user.is_staff or 
-        user.is_dispatcher or
+        user.is_department or
         incident.user_id == user.id or
         (user.is_responder and incident.assignments.filter_by(department_id=user.department_id).first())
     )

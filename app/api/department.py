@@ -313,7 +313,7 @@ def get_nearby_departments_for_incident(user, id):
         priority_score = (
             distance_km * 10 +  # Distance factor
             (dept.current_active_incidents / max(dept.max_concurrent_incidents, 1)) * 50 +  # Load factor
-            (dept.average_response_time_minutes or 30)  # Response time factor
+            30  # Default response time factor (30 minutes)
         )
         
         results.append({
@@ -326,11 +326,11 @@ def get_nearby_departments_for_incident(user, id):
             'priority_score': round(priority_score, 1),
             'headquarters_lat': float(dept.headquarters_lat),
             'headquarters_lng': float(dept.headquarters_lng),
-            'contact_phone': dept.contact_phone,
+            'contact_phone': dept.dispatch_phone,
             'current_active_incidents': dept.current_active_incidents,
             'max_concurrent_incidents': dept.max_concurrent_incidents,
             'available_capacity': dept.available_capacity,
-            'average_response_time': dept.average_response_time_minutes,
+            'average_response_time': None,  # Not tracked in current model
             'is_assigned': assignment is not None,
             'assignment_status': assignment.status if assignment else None,
             'assignment_priority': assignment.priority_rank if assignment else None,

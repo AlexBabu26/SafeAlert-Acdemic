@@ -117,10 +117,10 @@ class NotificationService:
         """
         notifications = []
         
-        # Notify dispatchers
-        dispatchers = User.query.filter(User.is_dispatcher == True).all()
+        # Notify departments
+        departments = User.query.filter(User.is_department == True).all()
         
-        for dispatcher in dispatchers:
+        for dispatcher in departments:
             notification = self.notify_user(
                 dispatcher,
                 NotificationType.INCIDENT_CREATED,
@@ -242,8 +242,8 @@ class NotificationService:
         # Truncate message for notification
         preview = message_text[:100] + '...' if len(message_text) > 100 else message_text
         
-        # If sender is responder/dispatcher, notify the reporter
-        if sender.is_responder or sender.is_dispatcher or sender.is_staff:
+        # If sender is responder/department, notify the reporter
+        if sender.is_responder or sender.is_department or sender.is_staff:
             if incident.user_id and incident.user_id != sender.id:
                 reporter = User.query.get(incident.user_id)
                 if reporter:

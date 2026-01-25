@@ -75,11 +75,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            showToast('Report submitted successfully!', 'success');
-            
-            setTimeout(() => {
-                window.location.href = `/reports/${incident.id}`;
-            }, 500);
+            // Show tracking code modal if tracking code is present
+            if (incident.tracking_code) {
+                showTrackingCodeModal(incident.tracking_code, incident.id);
+            } else {
+                showToast('Report submitted successfully!', 'success');
+                setTimeout(() => {
+                    window.location.href = `/reports/${incident.id}`;
+                }, 500);
+            }
         } catch (error) {
             showToast(error.message || 'Failed to submit report.', 'error');
         } finally {

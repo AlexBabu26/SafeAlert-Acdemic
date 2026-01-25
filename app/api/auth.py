@@ -239,18 +239,23 @@ def list_predefined_areas():
 
 @bp.route('/token/', methods=['POST'])
 def login():
-    """JWT token obtain endpoint (login)"""
+    """JWT token obtain endpoint (login)
+    
+    Supports login with either username or email address.
+    """
     if not request.is_json:
         return jsonify({'detail': 'JSON data required.'}), 400
     
-    username = request.json.get('username')
+    username_or_email = request.json.get('username')
     password = request.json.get('password')
     
-    if not username or not password:
+    if not username_or_email or not password:
         return jsonify({'detail': 'Username and password required.'}), 400
     
-    # Find user
-    user = User.query.filter_by(username=username).first()
+    # Find user by username OR email
+    user = User.query.filter(
+        (User.username == username_or_email) | (User.email == username_or_email)
+    ).first()
     
     if not user or not user.check_password(password):
         return jsonify({'detail': 'No active account found with the given credentials'}), 401

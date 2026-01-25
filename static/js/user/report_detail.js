@@ -21,6 +21,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="card-body">
                     <dl class="row">
+                        ${incident.anonymous_tracking_code ? `
+                            <dt class="col-sm-2">Tracking Code:</dt>
+                            <dd class="col-sm-10">
+                                <div class="d-flex align-items-center gap-2">
+                                    <code class="fs-6 fw-bold text-primary">${escapeHtml(incident.anonymous_tracking_code)}</code>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="copyToClipboard('${escapeHtml(incident.anonymous_tracking_code)}')" title="Copy tracking code">
+                                        <i class="bi bi-clipboard"></i> Copy
+                                    </button>
+                                    <a href="/track" class="btn btn-sm btn-outline-secondary" title="Track this report">
+                                        <i class="bi bi-search"></i> Track
+                                    </a>
+                                </div>
+                                <small class="text-muted d-block mt-1">
+                                    <i class="bi bi-info-circle"></i> Use this code to track your report status without logging in
+                                </small>
+                            </dd>
+                        ` : ''}
+                        
                         <dt class="col-sm-2">Category:</dt>
                         <dd class="col-sm-10">${escapeHtml(incident.category_name)}</dd>
                         
@@ -80,6 +98,16 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Failed to load report:', error);
         }
     }
+    
+    // Make copyToClipboard available globally
+    window.copyToClipboard = function(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Tracking code copied to clipboard!', 'success');
+        }).catch(err => {
+            console.error('Failed to copy:', err);
+            showToast('Failed to copy. Please copy manually.', 'error');
+        });
+    };
 
     async function loadMessages() {
         const container = document.getElementById('messages-list');
