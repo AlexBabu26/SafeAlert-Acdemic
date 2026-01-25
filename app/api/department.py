@@ -43,15 +43,26 @@ bp = Blueprint('department', __name__)
 @bp.route('/incidents/', methods=['GET'])
 @department_required
 def list_incidents(user):
-    """List all active incidents for department view"""
+    """List incidents for department view"""
     # Filter parameters
     status = request.args.get('status')
     severity = request.args.get('severity')
     category_id = request.args.get('category', type=int)
     search = request.args.get('search')
+    assigned_only = request.args.get('assigned_only', 'true').lower() == 'true'  # Default to showing only assigned incidents
     
-    # Base query - all incidents
-    query = IncidentReport.query
+    # Base query - filter by department assignments if assigned_only is True
+    if assigned_only and user.department_id:
+        # Only show incidents assigned to this department
+        query = IncidentReport.query.join(
+            IncidentAssignment,
+            IncidentAssignment.incident_id == IncidentReport.id
+        ).filter(
+            IncidentAssignment.department_id == user.department_id
+        ).distinct()
+    else:
+        # Show all incidents (for admin/dispatcher view)
+        query = IncidentReport.query
     
     # Apply filters
     if status:
@@ -562,6 +573,53 @@ def assign_respondent_to_task(user, assignment_id):
     return jsonify({
         'message': f'Assignment assigned to {respondent.full_name}.',
         'assignment': schema.dump(assignment)
+    }), 200
+
+
+@bp.route('/assignments/', methods=['GET'])
+@department_required
+def list_assignments(user):
+    """List all assignments for this department"""
+    if not user.department_id:
+        return jsonify({'detail': 'No department assigned.'}), 400
+    
+    # Filter parameters
+    status = request.args.get('status')
+    responder_id = request.args.get('respondent_id', type=int)
+    
+    # Base query - filter by department
+    query = IncidentAssignment.query.filter(
+        IncidentAssignment.department_id == user.department_id
+    )
+    
+    # Filter by status
+    if status:
+        query = query.filter(IncidentAssignment.status == status)
+    
+    # Filter by respondent
+    if responder_id:
+        query = query.filter(IncidentAssignment.responder_id == responder_id)
+    
+    # Order by priority and time
+    query = query.order_by(
+        IncidentAssignment.priority_rank,
+        IncidentAssignment.assigned_at.desc()
+    )
+    
+    # Pagination
+    page = request.args.get('page', 1, type=int)
+    per_page = current_app.config.get('PAGINATION_PER_PAGE', 20)
+    
+    total = query.count()
+    assignments = query.offset((page - 1) * per_page).limit(per_page).all()
+    
+    schema = AssignmentListSchema(many=True)
+    
+    return jsonify({
+        'count': total,
+        'next': f'/api/department/assignments/?page={page + 1}' if page * per_page < total else None,
+        'previous': f'/api/department/assignments/?page={page - 1}' if page > 1 else None,
+        'results': schema.dump(assignments)
     }), 200
 
 

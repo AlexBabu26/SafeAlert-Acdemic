@@ -508,6 +508,27 @@
         font-weight: 600;
     }
 
+    .assignment-item .assignment-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.5rem;
+    }
+
+    .assignment-item .respondent-info {
+        text-align: right;
+        padding: 0.5rem;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        min-width: 200px;
+    }
+
+    .assignment-item .respondent-info small {
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
     .pulse-indicator {
         display: inline-block;
         width: 10px;
@@ -558,7 +579,7 @@
     <!-- Incidents Sidebar -->
     <div class="sidebar">
         <div class="sidebar-header">
-            <h5 class="mb-0">Active Incidents</h5>
+            <h5 class="mb-0">My Assigned Incidents</h5>
         </div>
         
         <div class="stats-bar">
@@ -596,6 +617,12 @@
                 <option value="EN_ROUTE">En Route</option>
                 <option value="ON_SCENE">On Scene</option>
             </select>
+        </div>
+        <div class="filter-bar" style="padding-top: 0.5rem; padding-bottom: 0.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; cursor: pointer;">
+                <input type="checkbox" id="show-all-incidents" onchange="applyFilters()" style="cursor: pointer;">
+                <span>Show all incidents (not just assigned)</span>
+            </label>
         </div>
         
         <div class="incidents-list" id="incidents-list">
@@ -676,10 +703,18 @@ function initMap() {
 function loadIncidents() {
     const severity = document.getElementById('filter-severity').value;
     const status = document.getElementById('filter-status').value;
+    const showAll = document.getElementById('show-all-incidents')?.checked || false;
+    
+    // Update header text
+    const header = document.querySelector('.sidebar-header h5');
+    if (header) {
+        header.textContent = showAll ? 'All Active Incidents' : 'My Assigned Incidents';
+    }
     
     let url = `${API_BASE}/incidents/?`;
     if (severity) url += `severity=${severity}&`;
     if (status) url += `status=${status}&`;
+    if (!showAll) url += `assigned_only=true&`;
     
     apiRequest(url)
         .then(data => {
@@ -719,7 +754,9 @@ function renderIncidentsList(incidents) {
     const container = document.getElementById('incidents-list');
     
     if (!incidents.length) {
-        container.innerHTML = '<div class="text-center text-muted py-4">No active incidents</div>';
+        const showAll = document.getElementById('show-all-incidents')?.checked || false;
+        const message = showAll ? 'No active incidents' : 'No assigned incidents';
+        container.innerHTML = `<div class="text-center text-muted py-4">${message}</div>`;
         return;
     }
     
@@ -1008,9 +1045,128 @@ function renderAssignments(assignments) {
                 <span class="dept-name">${a.department_name || 'Unknown Department'}</span>
                 <span class="dept-status">${a.status.replace('_', ' ')}</span>
             </div>
-            <span class="priority-rank">Priority #${a.priority_rank}</span>
+            <div class="assignment-meta">
+                <span class="priority-rank">Priority #${a.priority_rank}</span>
+                ${a.responder_name ? 
+                    `<div class="respondent-info mt-2">
+                        <small class="text-muted">Assigned to:</small>
+                        <div class="d-flex align-items-center justify-content-between mt-1">
+                            <strong>${a.responder_name}</strong>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="assignRespondentToTask(${a.id}, ${a.incident_id})" title="Change respondent">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                        </div>
+                    </div>` :
+                    `<div class="respondent-info mt-2">
+                        <small class="text-muted">No respondent assigned</small>
+                        <button class="btn btn-sm btn-primary mt-1" onclick="assignRespondentToTask(${a.id}, ${a.incident_id})">
+                            Assign Respondent
+                        </button>
+                    </div>`
+                }
+            </div>
         </div>
     `).join('');
+}
+
+function assignRespondentToTask(assignmentId, incidentId) {
+    // Load available respondents
+    apiRequest(`${API_BASE}/respondents/?is_active=true&is_on_duty=true`)
+        .then(respondents => {
+            if (!respondents.results || respondents.results.length === 0) {
+                showToast('No available respondents found', 'warning');
+                return;
+            }
+            
+            // Create modal HTML
+            const options = respondents.results.map(r => 
+                `<option value="${r.id}">${r.first_name || ''} ${r.last_name || ''} (${r.username})${r.is_available ? ' - Available' : ' - Busy'}</option>`
+            ).join('');
+            
+            const modalHtml = `
+                <div class="modal fade" id="assignRespondentModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Assign Respondent</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <label class="form-label">Select Respondent:</label>
+                                <select id="respondent-select" class="form-select">
+                                    <option value="">-- Select Respondent --</option>
+                                    ${options}
+                                </select>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" onclick="confirmAssignRespondent(${assignmentId}, ${incidentId})">Assign</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('assignRespondentModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Show modal using Bootstrap
+            const modal = new bootstrap.Modal(document.getElementById('assignRespondentModal'));
+            modal.show();
+            
+            // Store respondents for the confirm function
+            window.currentRespondents = respondents.results;
+            
+            // Clean up modal when hidden
+            document.getElementById('assignRespondentModal').addEventListener('hidden.bs.modal', function() {
+                this.remove();
+                window.currentRespondents = null;
+            });
+        })
+        .catch(err => {
+            console.error('Error loading respondents:', err);
+            showToast('Error loading respondents', 'error');
+        });
+}
+
+function confirmAssignRespondent(assignmentId, incidentId) {
+    const select = document.getElementById('respondent-select');
+    const respondentId = select.value;
+    
+    if (!respondentId) {
+        showToast('Please select a respondent', 'warning');
+        return;
+    }
+    
+    const selectedRespondent = window.currentRespondents.find(r => r.id == respondentId);
+    if (!selectedRespondent) {
+        showToast('Invalid selection', 'error');
+        return;
+    }
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('assignRespondentModal'));
+    if (modal) modal.hide();
+    
+    // Assign the respondent
+    apiRequest(`${API_BASE}/assignments/${assignmentId}/assign-respondent/`, {
+        method: 'POST',
+        body: JSON.stringify({ respondent_id: parseInt(respondentId) })
+    })
+    .then(data => {
+        showToast(`Assignment assigned to ${selectedRespondent.first_name || ''} ${selectedRespondent.last_name || ''}`, 'success');
+        loadIncidentDetails(incidentId);
+    })
+    .catch(err => {
+        console.error('Error assigning respondent:', err);
+        showToast('Error assigning respondent', 'error');
+    });
 }
 
 function closeDetailPanel() {
