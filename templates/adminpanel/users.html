@@ -98,7 +98,7 @@
     }
 
     .role-badge.admin { background: #fef2f2; color: #dc2626; }
-    .role-badge.dispatcher { background: #fff7ed; color: #ea580c; }
+    .role-badge.department { background: #fff7ed; color: #ea580c; }
     .role-badge.responder { background: #dbeafe; color: #2563eb; }
     .role-badge.citizen { background: #f0fdf4; color: #16a34a; }
 
@@ -310,7 +310,7 @@
                     <option value="">All Roles</option>
                     <option value="citizen">Citizens</option>
                     <option value="responder">Responders</option>
-                    <option value="dispatcher">Dispatchers</option>
+                    <option value="department">Departments</option>
                     <option value="admin">Admins</option>
                 </select>
             </div>
@@ -611,8 +611,8 @@ function viewUser(userId) {
                                 <label class="form-check-label">Admin</label>
                             </div>
                             <div class="form-check">
-                                <input type="checkbox" class="form-check-input" id="edit-is-dispatcher" ${user.is_dispatcher ? 'checked' : ''}>
-                                <label class="form-check-label">Dispatcher</label>
+                                <input type="checkbox" class="form-check-input" id="edit-is-department" ${user.is_department ? 'checked' : ''}>
+                                <label class="form-check-label">Department</label>
                             </div>
                             <div class="form-check">
                                 <input type="checkbox" class="form-check-input" id="edit-is-responder" ${user.is_responder ? 'checked' : ''}>
@@ -654,7 +654,7 @@ function saveUserChanges() {
     const data = {
         is_active: document.getElementById('edit-is-active').value === 'true',
         is_staff: document.getElementById('edit-is-staff').checked,
-        is_dispatcher: document.getElementById('edit-is-dispatcher').checked,
+        is_department: document.getElementById('edit-is-department').checked,
         is_responder: document.getElementById('edit-is-responder').checked,
         department_id: document.getElementById('edit-department').value || null,
         badge_number: document.getElementById('edit-badge').value || null
@@ -702,7 +702,7 @@ function getInitials(user) {
 
 function getRoleClass(user) {
     if (user.is_staff) return 'admin';
-    if (user.is_dispatcher) return 'dispatcher';
+    if (user.is_department) return 'department';
     if (user.is_responder) return 'responder';
     return 'citizen';
 }

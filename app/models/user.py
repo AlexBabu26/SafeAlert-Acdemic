@@ -46,6 +46,10 @@ class User(db.Model):
     home_latitude = db.Column(db.Numeric(9, 6), nullable=True)
     home_longitude = db.Column(db.Numeric(9, 6), nullable=True)
     
+    # Password reset
+    reset_token = db.Column(db.String(100), nullable=True, unique=True)
+    reset_token_expiry = db.Column(db.DateTime, nullable=True)
+    
     # Notification preferences
     push_token = db.Column(db.String(255), nullable=True)  # For push notifications
     notification_preferences = db.Column(db.JSON, nullable=True)  # {"sms": true, "email": true, "push": true}

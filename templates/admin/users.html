@@ -98,7 +98,7 @@
     }
 
     .role-badge.admin { background: #fef2f2; color: #dc2626; }
-    .role-badge.dispatcher { background: #fff7ed; color: #ea580c; }
+    .role-badge.department { background: #fff7ed; color: #ea580c; }
     .role-badge.responder { background: #dbeafe; color: #2563eb; }
     .role-badge.citizen { background: #f0fdf4; color: #16a34a; }
 
@@ -201,7 +201,7 @@
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <h1 class="h3 mb-1">User Management</h1>
-                <p class="mb-0 opacity-75">Manage all users, responders, and dispatchers</p>
+                <p class="mb-0 opacity-75">Manage all users, departments, and responders</p>
             </div>
             <button class="btn btn-light" onclick="showAddUserModal()">
                 <i class="bi bi-plus-lg"></i> Add User
@@ -265,7 +265,7 @@
                     <option value="">All Roles</option>
                     <option value="citizen">Citizens</option>
                     <option value="responder">Responders</option>
-                    <option value="dispatcher">Dispatchers</option>
+                    <option value="department">Departments</option>
                     <option value="admin">Admins</option>
                 </select>
             </div>
@@ -523,6 +523,41 @@ function viewUser(userId) {
     apiRequest(`${API_BASE}/${userId}/`)
         .then(user => {
             const content = document.getElementById('user-detail-content');
+            
+            // Determine what department info to show
+            let departmentSection = '';
+            if (user.is_department) {
+                // For department users, show their managed department info
+                const deptInfo = user.department_id ? getDepartmentInfo(user.department_id) : null;
+                departmentSection = `
+                    <div class="mb-3">
+                        <label class="form-label small">Managed Department</label>
+                        <input type="text" class="form-control" value="${deptInfo ? deptInfo.name : 'Not assigned'}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Department Type</label>
+                        <input type="text" class="form-control" value="${deptInfo ? deptInfo.type : 'N/A'}" disabled>
+                    </div>
+                `;
+            } else if (user.is_responder) {
+                // For responders, show department selection and badge
+                departmentSection = `
+                    <div class="mb-3">
+                        <label class="form-label small">Department</label>
+                        <select class="form-select" id="edit-department">
+                            <option value="">No Department</option>
+                            ${departments.map(d => 
+                                `<option value="${d.id}" ${user.department_id === d.id ? 'selected' : ''}>${d.name} (${d.type})</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Badge Number</label>
+                        <input type="text" class="form-control" id="edit-badge" value="${user.badge_number || ''}">
+                    </div>
+                `;
+            }
+            
             content.innerHTML = `
                 <div class="row">
                     <div class="col-md-6">
@@ -566,27 +601,15 @@ function viewUser(userId) {
                                 <label class="form-check-label">Admin</label>
                             </div>
                             <div class="form-check">
-                                <input type="checkbox" class="form-check-input" id="edit-is-dispatcher" ${user.is_dispatcher ? 'checked' : ''}>
-                                <label class="form-check-label">Dispatcher</label>
+                                <input type="checkbox" class="form-check-input" id="edit-is-department" ${user.is_department ? 'checked' : ''}>
+                                <label class="form-check-label">Department</label>
                             </div>
                             <div class="form-check">
                                 <input type="checkbox" class="form-check-input" id="edit-is-responder" ${user.is_responder ? 'checked' : ''}>
                                 <label class="form-check-label">Responder</label>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label small">Department</label>
-                            <select class="form-select" id="edit-department">
-                                <option value="">No Department</option>
-                                ${departments.map(d => 
-                                    `<option value="${d.id}" ${user.department_id === d.id ? 'selected' : ''}>${d.name}</option>`
-                                ).join('')}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small">Badge Number</label>
-                            <input type="text" class="form-control" id="edit-badge" value="${user.badge_number || ''}">
-                        </div>
+                        ${departmentSection}
                     </div>
                 </div>
                 <hr>
@@ -609,11 +632,20 @@ function saveUserChanges() {
     const data = {
         is_active: document.getElementById('edit-is-active').value === 'true',
         is_staff: document.getElementById('edit-is-staff').checked,
-        is_dispatcher: document.getElementById('edit-is-dispatcher').checked,
+        is_department: document.getElementById('edit-is-department').checked,
         is_responder: document.getElementById('edit-is-responder').checked,
-        department_id: document.getElementById('edit-department').value || null,
-        badge_number: document.getElementById('edit-badge').value || null
     };
+    
+    // Only include department_id and badge_number if the fields exist (responders only)
+    const deptSelect = document.getElementById('edit-department');
+    const badgeInput = document.getElementById('edit-badge');
+    
+    if (deptSelect) {
+        data.department_id = deptSelect.value || null;
+    }
+    if (badgeInput) {
+        data.badge_number = badgeInput.value || null;
+    }
     
     apiRequest(`${API_BASE}/${currentUserId}/`, {
         method: 'PATCH',
@@ -657,9 +689,14 @@ function getInitials(user) {
 
 function getRoleClass(user) {
     if (user.is_staff) return 'admin';
-    if (user.is_dispatcher) return 'dispatcher';
+    if (user.is_department) return 'department';
     if (user.is_responder) return 'responder';
     return 'citizen';
+}
+
+function getDepartmentInfo(deptId) {
+    const dept = departments.find(d => d.id === deptId);
+    return dept || null;
 }
 
 function getDepartmentName(deptId) {

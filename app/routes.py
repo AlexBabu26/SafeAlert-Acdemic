@@ -25,6 +25,18 @@ def login_page():
     return render_template('public/login.html')
 
 
+@bp.route('/forgot-password')
+def forgot_password_page():
+    """Forgot password page"""
+    return render_template('public/forgot_password.html')
+
+
+@bp.route('/reset-password')
+def reset_password_page():
+    """Reset password page"""
+    return render_template('public/reset_password.html')
+
+
 # ==================== User/Citizen Routes ====================
 
 @bp.route('/reports')

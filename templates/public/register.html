@@ -92,6 +92,7 @@
     }
     
     .role-card.citizen i { color: #10b981; }
+    .role-card.department i { color: #f59e0b; }
     .role-card.responder i { color: #3b82f6; }
     
     .role-card h5 {
@@ -291,7 +292,7 @@
                             <i class="bi bi-person-plus text-primary fs-4"></i>
                         </div>
                         <h4 class="mt-3 mb-1 fw-bold">Create your account</h4>
-                        <p class="text-muted mb-0">Join SafeAlert as a citizen or responder</p>
+                        <p class="text-muted mb-0">Join SafeAlert to help keep our community safe</p>
                     </div>
 
                     <!-- Role Selector -->
@@ -299,22 +300,27 @@
                         <div class="role-card citizen selected" onclick="selectRole('citizen')">
                             <i class="bi bi-person"></i>
                             <h5>Citizen</h5>
-                            <p>Report incidents and track responses</p>
+                            <p>Report incidents</p>
+                        </div>
+                        <div class="role-card department" onclick="selectRole('department')">
+                            <i class="bi bi-building"></i>
+                            <h5>Department</h5>
+                            <p>Manage & allocate tasks</p>
                         </div>
                         <div class="role-card responder" onclick="selectRole('responder')">
                             <i class="bi bi-person-badge"></i>
-                            <h5>Responder</h5>
-                            <p>Respond to emergency incidents</p>
+                            <h5>Respondent</h5>
+                            <p>Respond to incidents</p>
                         </div>
                     </div>
 
-                    <!-- Pending Approval Notice -->
-                    <div class="pending-notice" id="pending-notice">
+                    <!-- Pending Approval Notice - Shows for ALL roles -->
+                    <div class="pending-notice show" id="pending-notice">
                         <div class="d-flex align-items-center">
                             <i class="bi bi-info-circle text-warning fs-4 me-3"></i>
                             <div>
-                                <strong>Responder accounts require approval</strong>
-                                <p class="mb-0 small text-muted">Your account will be reviewed by an administrator before activation.</p>
+                                <strong id="approval-title">All accounts require admin approval</strong>
+                                <p class="mb-0 small text-muted" id="approval-text">Your account will be reviewed by an administrator before you can login.</p>
                             </div>
                         </div>
                     </div>
@@ -345,37 +351,64 @@
                             <input type="tel" class="form-control" id="phone_number" placeholder="+1 (555) 123-4567">
                         </div>
                         
-                        <!-- Responder-specific fields -->
-                        <div class="responder-fields" id="responder-fields">
-                            <h6 class="mb-3"><i class="bi bi-shield-check text-primary"></i> Responder Information</h6>
+                        <!-- Department-specific fields (Creates NEW department/office) -->
+                        <div class="responder-fields" id="department-fields">
+                            <h6 class="mb-3"><i class="bi bi-building text-warning"></i> Register Your Office/Station</h6>
+                            <p class="form-text mb-3" style="color: #94a3b8;">Register your office/station (e.g., Downtown Fire Station, Central Police Station)</p>
+                            
                             <div class="mb-3">
-                                <label for="department_id" class="form-label">Department <span class="text-danger">*</span></label>
+                                <label for="department_name" class="form-label">Office/Station Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="department_name" placeholder="e.g., Downtown Fire Station">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="department_type" class="form-label">Department Type <span class="text-danger">*</span></label>
+                                <select class="form-select" id="department_type">
+                                    <option value="">Select department type...</option>
+                                </select>
+                                <small class="form-text">What type of emergency service does this office provide?</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="department_code" class="form-label">Department Code (Optional)</label>
+                                <input type="text" class="form-control" id="department_code" placeholder="e.g., FD-001 (auto-generated if empty)">
+                                <small class="form-text">Leave empty to auto-generate based on type</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Office Location <span class="text-danger">*</span></label>
+                                <small class="text-muted d-block mb-2">Where is your office/station located? This helps route nearby incidents.</small>
+                                <div class="location-options mb-2 d-flex gap-2 flex-wrap">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="detectDeptLocation()">
+                                        <i class="bi bi-geo-alt-fill"></i> Detect Current Location
+                                    </button>
+                                </div>
+                                <select class="form-select mb-2" id="dept_area_select" onchange="selectDeptArea(this.value)">
+                                    <option value="">Or select a predefined area...</option>
+                                </select>
+                                <input type="text" class="form-control mb-2" id="dept_address" placeholder="Full address of your office/station">
+                                <input type="hidden" id="dept_latitude">
+                                <input type="hidden" id="dept_longitude">
+                                <div id="dept-location-status" class="form-text"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Responder-specific fields (Joins EXISTING department) -->
+                        <div class="responder-fields" id="responder-fields">
+                            <h6 class="mb-3"><i class="bi bi-shield-check text-primary"></i> Join a Department</h6>
+                            <p class="form-text mb-3" style="color: #94a3b8;">Select the department/office where you work as a respondent</p>
+                            
+                            <div class="mb-3">
+                                <label for="department_id" class="form-label">Select Department <span class="text-danger">*</span></label>
                                 <select class="form-select" id="department_id">
                                     <option value="">Select your department...</option>
                                 </select>
+                                <small class="form-text">Choose the department you work for. Your department manager will approve your registration.</small>
                             </div>
+                            
                             <div class="mb-3">
                                 <label for="badge_number" class="form-label">Badge/ID Number</label>
                                 <input type="text" class="form-control" id="badge_number" placeholder="e.g., FD-12345">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Base Location <span class="text-danger">*</span></label>
-                                <small class="text-muted d-block mb-2">Used for optimal incident allocation</small>
-                                <div class="location-options mb-2 d-flex gap-2 flex-wrap">
-                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="detectLocation()">
-                                        <i class="bi bi-geo-alt-fill"></i> Detect My Location
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="useDepartmentLocation()">
-                                        <i class="bi bi-building"></i> Use Department Location
-                                    </button>
-                                </div>
-                                <select class="form-select mb-2" id="area_select" onchange="selectArea(this.value)">
-                                    <option value="">Or select a predefined area...</option>
-                                </select>
-                                <input type="text" class="form-control mb-2" id="home_address" placeholder="Address (optional)">
-                                <input type="hidden" id="home_latitude">
-                                <input type="hidden" id="home_longitude">
-                                <div id="location-status" class="form-text"></div>
                             </div>
                         </div>
                         
@@ -407,9 +440,12 @@
 <script>
 let selectedRole = 'citizen';
 let departmentsData = [];
+let departmentTypesData = [];
+let areasData = [];
 
 document.addEventListener('DOMContentLoaded', function() {
     loadDepartments();
+    loadDepartmentTypes();
     loadAreas();
 });
 
@@ -423,55 +459,100 @@ function selectRole(role) {
     });
     document.querySelector(`.role-card.${role}`).classList.add('selected');
     
-    // Show/hide responder fields
+    // Show/hide role-specific fields
     const responderFields = document.getElementById('responder-fields');
-    const pendingNotice = document.getElementById('pending-notice');
+    const departmentFields = document.getElementById('department-fields');
+    const approvalTitle = document.getElementById('approval-title');
+    const approvalText = document.getElementById('approval-text');
+    
+    // Hide all role-specific fields first
+    responderFields.classList.remove('show');
+    departmentFields.classList.remove('show');
     
     if (role === 'responder') {
         responderFields.classList.add('show');
-        pendingNotice.classList.add('show');
+        approvalTitle.textContent = 'Respondent accounts require approval';
+        approvalText.textContent = 'Your account will be reviewed by your department manager or an administrator before activation.';
+    } else if (role === 'department') {
+        departmentFields.classList.add('show');
+        approvalTitle.textContent = 'Department registration requires admin approval';
+        approvalText.textContent = 'Both your office/station and your account will be reviewed and activated by an administrator.';
     } else {
-        responderFields.classList.remove('show');
-        pendingNotice.classList.remove('show');
+        approvalTitle.textContent = 'All accounts require admin approval';
+        approvalText.textContent = 'Your account will be reviewed by an administrator before you can login.';
     }
 }
 
+// Load existing departments for responder registration
 function loadDepartments() {
     fetch('/api/auth/departments/')
         .then(res => res.json())
         .then(departments => {
             departmentsData = departments;
-            const select = document.getElementById('department_id');
-            departments.forEach(dept => {
+            
+            const responderSelect = document.getElementById('department_id');
+            
+            if (departments.length === 0) {
                 const option = document.createElement('option');
-                option.value = dept.id;
-                option.textContent = `${dept.name} (${dept.type})`;
-                option.dataset.lat = dept.headquarters_lat;
-                option.dataset.lng = dept.headquarters_lng;
-                option.dataset.address = dept.address;
-                select.appendChild(option);
-            });
+                option.value = '';
+                option.textContent = 'No departments available yet';
+                option.disabled = true;
+                responderSelect.appendChild(option);
+            } else {
+                departments.forEach(dept => {
+                    const option = document.createElement('option');
+                    option.value = dept.id;
+                    option.textContent = `${dept.name} (${dept.type_display})`;
+                    option.dataset.address = dept.address;
+                    responderSelect.appendChild(option);
+                });
+            }
         })
         .catch(err => console.error('Error loading departments:', err));
+}
+
+// Load department types for new department registration
+function loadDepartmentTypes() {
+    fetch('/api/auth/department-types/')
+        .then(res => res.json())
+        .then(types => {
+            departmentTypesData = types;
+            
+            const typeSelect = document.getElementById('department_type');
+            
+            types.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type.type;
+                option.textContent = `${type.icon} ${type.name}`;
+                option.dataset.description = type.description;
+                typeSelect.appendChild(option);
+            });
+        })
+        .catch(err => console.error('Error loading department types:', err));
 }
 
 function loadAreas() {
     fetch('/api/auth/areas/')
         .then(res => res.json())
         .then(areas => {
-            const select = document.getElementById('area_select');
+            areasData = areas;
+            
+            // For department registration
+            const deptAreaSelect = document.getElementById('dept_area_select');
+            
             areas.forEach(area => {
                 const option = document.createElement('option');
                 option.value = JSON.stringify({lat: area.latitude, lng: area.longitude, name: area.name});
                 option.textContent = area.name;
-                select.appendChild(option);
+                deptAreaSelect.appendChild(option);
             });
         })
         .catch(err => console.error('Error loading areas:', err));
 }
 
-function detectLocation() {
-    const status = document.getElementById('location-status');
+// Department location detection
+function detectDeptLocation() {
+    const status = document.getElementById('dept-location-status');
     
     if (!navigator.geolocation) {
         status.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Geolocation not supported by your browser</span>';
@@ -482,39 +563,19 @@ function detectLocation() {
     
     navigator.geolocation.getCurrentPosition(
         (position) => {
-            document.getElementById('home_latitude').value = position.coords.latitude;
-            document.getElementById('home_longitude').value = position.coords.longitude;
+            document.getElementById('dept_latitude').value = position.coords.latitude;
+            document.getElementById('dept_longitude').value = position.coords.longitude;
             status.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> Location detected successfully!</span>';
         },
         (error) => {
-            status.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Could not detect location. Please select an area or use department location.</span>';
+            status.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Could not detect location. Please select an area instead.</span>';
             console.error('Geolocation error:', error);
         }
     );
 }
 
-function useDepartmentLocation() {
-    const deptId = document.getElementById('department_id').value;
-    const status = document.getElementById('location-status');
-    
-    if (!deptId) {
-        showToast('Please select a department first', 'warning');
-        return;
-    }
-    
-    const dept = departmentsData.find(d => d.id == deptId);
-    if (dept && dept.headquarters_lat) {
-        document.getElementById('home_latitude').value = dept.headquarters_lat;
-        document.getElementById('home_longitude').value = dept.headquarters_lng;
-        document.getElementById('home_address').value = dept.address || dept.name;
-        status.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill"></i> Using ${dept.name} location</span>`;
-    } else {
-        status.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Department location not available</span>';
-    }
-}
-
-function selectArea(value) {
-    const status = document.getElementById('location-status');
+function selectDeptArea(value) {
+    const status = document.getElementById('dept-location-status');
     
     if (!value) {
         status.innerHTML = '';
@@ -522,9 +583,11 @@ function selectArea(value) {
     }
     
     const area = JSON.parse(value);
-    document.getElementById('home_latitude').value = area.lat;
-    document.getElementById('home_longitude').value = area.lng;
-    document.getElementById('home_address').value = area.name;
+    document.getElementById('dept_latitude').value = area.lat;
+    document.getElementById('dept_longitude').value = area.lng;
+    if (!document.getElementById('dept_address').value) {
+        document.getElementById('dept_address').value = area.name;
+    }
     status.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill"></i> Selected area: ${area.name}</span>`;
 }
 
@@ -537,7 +600,7 @@ document.getElementById('register-form').addEventListener('submit', async functi
     const password = document.getElementById('password').value;
     const password2 = document.getElementById('password2').value;
     
-    // Validation
+    // Basic validation
     if (password !== password2) {
         showToast('Passwords do not match', 'error');
         return;
@@ -548,11 +611,28 @@ document.getElementById('register-form').addEventListener('submit', async functi
         return;
     }
     
+    // Role-specific validation
     if (role === 'responder' && !document.getElementById('department_id').value) {
-        showToast('Please select a department', 'error');
+        showToast('Please select a department to join', 'error');
         return;
     }
     
+    if (role === 'department') {
+        if (!document.getElementById('department_name').value) {
+            showToast('Please enter your office/station name', 'error');
+            return;
+        }
+        if (!document.getElementById('department_type').value) {
+            showToast('Please select a department type', 'error');
+            return;
+        }
+        if (!document.getElementById('dept_latitude').value || !document.getElementById('dept_longitude').value) {
+            showToast('Please set your office location', 'error');
+            return;
+        }
+    }
+    
+    // Build request data
     const data = {
         username,
         email: email || null,
@@ -564,47 +644,33 @@ document.getElementById('register-form').addEventListener('submit', async functi
         role
     };
     
-    // Add responder fields if applicable
+    // Add department registration fields (creates new department)
+    if (role === 'department') {
+        data.department_name = document.getElementById('department_name').value;
+        data.department_type = document.getElementById('department_type').value;
+        data.department_code = document.getElementById('department_code').value || null;
+        data.address = document.getElementById('dept_address').value;
+        data.latitude = parseFloat(document.getElementById('dept_latitude').value);
+        data.longitude = parseFloat(document.getElementById('dept_longitude').value);
+    }
+    
+    // Add responder fields (joins existing department)
     if (role === 'responder') {
         data.department_id = parseInt(document.getElementById('department_id').value);
-        data.badge_number = document.getElementById('badge_number').value;
-        
-        // Add location data
-        const latitude = document.getElementById('home_latitude').value;
-        const longitude = document.getElementById('home_longitude').value;
-        const address = document.getElementById('home_address').value;
-        
-        if (latitude && longitude) {
-            data.home_latitude = parseFloat(latitude);
-            data.home_longitude = parseFloat(longitude);
-        }
-        
-        if (address) {
-            data.home_address = address;
-        }
+        data.badge_number = document.getElementById('badge_number').value || null;
     }
     
     try {
         showLoader();
         const response = await apiPost(API_ENDPOINTS.auth.register, data);
         
-        if (role === 'responder') {
-            // Responder needs approval - show message and redirect to login
-            showToast(response.message || 'Account created! Awaiting admin approval.', 'success');
-            setTimeout(() => {
-                window.location.href = '/login';
-            }, 3000);
-        } else {
-            // Citizen - auto login
-            if (response.access) {
-                setTokens(response.access, response.refresh);
-                setUserInfo(response.user);
-                showToast('Registration successful!', 'success');
-                setTimeout(() => {
-                    window.location.href = '/reports';
-                }, 500);
-            }
-        }
+        // Show success message
+        showToast(response.message || 'Account created! Awaiting admin approval.', 'success');
+        
+        // Redirect to login page after a delay
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 3000);
     } catch (error) {
         // Handle validation errors
         if (typeof error.message === 'object') {

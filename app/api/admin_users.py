@@ -210,7 +210,10 @@ def update_user(user, user_id):
 @bp.route('/<int:user_id>/activate/', methods=['POST'])
 @admin_required
 def activate_user(user, user_id):
-    """Activate a user account"""
+    """Activate a user account
+    
+    For department users, this also activates the associated department/office.
+    """
     target_user = User.query.get(user_id)
     if not target_user:
         return jsonify({'detail': 'User not found.'}), 404
@@ -219,14 +222,28 @@ def activate_user(user, user_id):
         return jsonify({'detail': 'User is already active.'}), 400
     
     target_user.is_active = True
+    
+    # If this is a department user, also activate their department
+    department_activated = False
+    if target_user.is_department and target_user.department_id:
+        dept = Department.query.get(target_user.department_id)
+        if dept and not dept.is_active:
+            dept.is_active = True
+            department_activated = True
+    
     db.session.commit()
     
     # TODO: Send notification to user about activation
     
     schema = UserAdminSchema()
+    message = f'User {target_user.username} has been activated.'
+    if department_activated:
+        message += f' Department "{dept.name}" has also been activated.'
+    
     return jsonify({
-        'message': f'User {target_user.username} has been activated.',
-        'user': schema.dump(target_user)
+        'message': message,
+        'user': schema.dump(target_user),
+        'department_activated': department_activated
     }), 200
 
 

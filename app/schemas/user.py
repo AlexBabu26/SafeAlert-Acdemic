@@ -18,14 +18,19 @@ class UserRegistrationSchema(Schema):
     # Role selection - 'citizen', 'responder', or 'department'
     role = fields.Str(required=False, validate=validate.OneOf(['citizen', 'responder', 'department']), load_default='citizen')
     
-    # Responder/Department-specific fields (required if role is responder or department)
-    department_id = fields.Int(required=False, allow_none=True)
+    # Responder-specific fields (required if role is responder)
+    department_id = fields.Int(required=False, allow_none=True)  # For responder: which department to join
     badge_number = fields.Str(required=False, allow_none=True)
     
-    # Location fields (for responders - important for allocation)
-    home_address = fields.Str(required=False, allow_none=True)
-    home_latitude = fields.Float(required=False, allow_none=True)
-    home_longitude = fields.Float(required=False, allow_none=True)
+    # Department-specific fields (required if role is department - creates a new department/office)
+    department_name = fields.Str(required=False, allow_none=True)  # e.g., "Downtown Fire Station"
+    department_type = fields.Str(required=False, allow_none=True)  # FIRE, POLICE, MEDICAL, etc.
+    department_code = fields.Str(required=False, allow_none=True)  # e.g., "FD-01"
+    
+    # Location fields (for department - where the office/station is located)
+    address = fields.Str(required=False, allow_none=True)
+    latitude = fields.Float(required=False, allow_none=True)
+    longitude = fields.Float(required=False, allow_none=True)
     
     @validates_schema
     def validate_passwords(self, data, **kwargs):
@@ -46,12 +51,16 @@ class UserRegistrationSchema(Schema):
         # Validate responder-specific fields
         if data.get('role') == 'responder':
             if not data.get('department_id'):
-                raise ValidationError({'department_id': ['Department is required for responder registration.']})
+                raise ValidationError({'department_id': ['Please select a department to join.']})
         
-        # Validate department-specific fields
+        # Validate department-specific fields (creating a new office/station)
         if data.get('role') == 'department':
-            if not data.get('department_id'):
-                raise ValidationError({'department_id': ['Department is required for department user registration.']})
+            if not data.get('department_name'):
+                raise ValidationError({'department_name': ['Department/Office name is required.']})
+            if not data.get('department_type'):
+                raise ValidationError({'department_type': ['Department type is required.']})
+            if not data.get('latitude') or not data.get('longitude'):
+                raise ValidationError({'latitude': ['Office location is required.']})
 
 
 class UserSchema(Schema):
