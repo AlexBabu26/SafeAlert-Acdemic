@@ -2,10 +2,9 @@
 Admin incidents API endpoints
 """
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
 from marshmallow import ValidationError
 
-from app.models import User, IncidentReport, StatusHistory, Category
+from app.models import IncidentReport, StatusHistory
 from app.extensions import db
 from app.schemas.incident import IncidentReportSchema, IncidentStatusUpdateSchema
 from app.utils.permissions import admin_required
@@ -16,7 +15,7 @@ bp = Blueprint('admin_incidents', __name__)
 
 @bp.route('/incidents/', methods=['GET'])
 @admin_required
-def list_all_incidents():
+def list_all_incidents(user):
     """List all incidents (admin only)"""
     # Start with all incidents
     query = IncidentReport.query
@@ -56,7 +55,7 @@ def list_all_incidents():
 
 @bp.route('/incidents/<int:id>/', methods=['GET'])
 @admin_required
-def get_incident(id):
+def get_incident(user, id):
     """Get incident details (admin only)"""
     incident = IncidentReport.query.get(id)
     
@@ -69,7 +68,7 @@ def get_incident(id):
 
 @bp.route('/incidents/<int:id>/status/', methods=['PATCH'])
 @admin_required
-def update_status(id):
+def update_status(user, id):
     """Update incident status (admin only)"""
     if not request.is_json:
         return jsonify({'detail': 'JSON data required.'}), 400
@@ -85,9 +84,6 @@ def update_status(id):
         data = schema.load(request.json)
     except ValidationError as err:
         return jsonify(err.messages), 400
-    
-    current_user_id = get_jwt_identity()  # Returns string from JWT
-    user = User.query.get(int(current_user_id))
     
     old_status = incident.status
     new_status = data['status']

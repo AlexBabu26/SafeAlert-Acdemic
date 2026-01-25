@@ -25,6 +25,18 @@ def login_page():
     return render_template('public/login.html')
 
 
+@bp.route('/forgot-password')
+def forgot_password_page():
+    """Forgot password page"""
+    return render_template('public/forgot_password.html')
+
+
+@bp.route('/reset-password')
+def reset_password_page():
+    """Reset password page"""
+    return render_template('public/reset_password.html')
+
+
 # ==================== User/Citizen Routes ====================
 
 @bp.route('/reports')
@@ -65,24 +77,30 @@ def responder_assignment_detail(pk):
     return render_template('responder/assignment_detail.html')
 
 
-# ==================== Dispatcher Routes ====================
+# ==================== Department Routes ====================
 
-@bp.route('/dispatcher/dashboard')
-def dispatcher_dashboard():
-    """Dispatcher command center"""
-    return render_template('dispatcher/dashboard.html')
-
-
-@bp.route('/dispatcher/incidents/<int:pk>')
-def dispatcher_incident_detail(pk):
-    """Dispatcher incident detail page"""
-    return render_template('dispatcher/incident_detail.html')
+@bp.route('/department/dashboard')
+def department_dashboard():
+    """Department command center"""
+    return render_template('department/dashboard.html')
 
 
-@bp.route('/dispatcher/departments')
-def dispatcher_departments():
-    """Dispatcher departments overview"""
-    return render_template('dispatcher/departments.html')
+@bp.route('/department/incidents/<int:pk>')
+def department_incident_detail(pk):
+    """Department incident detail page"""
+    return render_template('department/incident_detail.html')
+
+
+@bp.route('/department/departments')
+def department_departments():
+    """Department overview page"""
+    return render_template('department/departments.html')
+
+
+@bp.route('/department/respondents')
+def department_respondents():
+    """Department respondent management page"""
+    return render_template('department/respondents.html')
 
 
 # ==================== Admin Routes ====================
@@ -121,8 +139,28 @@ def admin_users():
 
 @bp.route('/static/<path:filename>')
 def static_files(filename):
-    """Serve static files"""
-    return send_from_directory(current_app.config.get('STATIC_FOLDER', 'static'), filename)
+    """Serve static files with correct MIME types"""
+    from flask import make_response
+    import mimetypes
+    
+    response = make_response(
+        send_from_directory(current_app.config.get('STATIC_FOLDER', 'static'), filename)
+    )
+    
+    # Set correct MIME type for JavaScript files
+    if filename.endswith('.js'):
+        response.headers['Content-Type'] = 'application/javascript; charset=utf-8'
+    elif filename.endswith('.json'):
+        response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    elif filename.endswith('.css'):
+        response.headers['Content-Type'] = 'text/css; charset=utf-8'
+    else:
+        # Let Flask/mimetypes handle other file types
+        mimetype, _ = mimetypes.guess_type(filename)
+        if mimetype:
+            response.headers['Content-Type'] = mimetype
+    
+    return response
 
 
 @bp.route('/media/<path:filename>')

@@ -4,7 +4,7 @@ Flask application factory for SafeAlert
 from flask import Flask
 from pathlib import Path
 from app.config import Config
-from app.extensions import db, jwt, cors, socketio
+from app.extensions import db, jwt, cors, socketio, migrate
 
 # Get the base directory (project root)
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,6 +24,7 @@ def create_app(config_class=Config):
     jwt.init_app(app)
     cors.init_app(app, origins=app.config['CORS_ORIGINS'], supports_credentials=app.config['CORS_SUPPORTS_CREDENTIALS'])
     socketio.init_app(app)
+    migrate.init_app(app, db)
     
     # Configure JWT to handle integer identities
     # Flask-JWT-Extended expects string identities, so we convert
@@ -34,7 +35,7 @@ def create_app(config_class=Config):
     
     # Register blueprints - API
     from app.api import auth, categories, incidents, admin_incidents, messages, analytics
-    from app.api import responder, dispatcher, notifications, alerts
+    from app.api import responder, department, notifications, alerts, admin_users, admin_categories
     from app import routes as frontend
     
     app.register_blueprint(auth.bp, url_prefix='/api/auth')
@@ -43,8 +44,10 @@ def create_app(config_class=Config):
     app.register_blueprint(admin_incidents.bp, url_prefix='/api/admin')
     app.register_blueprint(messages.bp)  # Messages routes are already prefixed in the blueprint
     app.register_blueprint(analytics.bp, url_prefix='/api/admin/analytics')
+    app.register_blueprint(admin_users.bp, url_prefix='/api/admin/users')
+    app.register_blueprint(admin_categories.bp, url_prefix='/api/admin/categories')
     app.register_blueprint(responder.bp, url_prefix='/api/responder')
-    app.register_blueprint(dispatcher.bp, url_prefix='/api/dispatcher')
+    app.register_blueprint(department.bp, url_prefix='/api/department')
     app.register_blueprint(notifications.bp, url_prefix='/api/notifications')
     app.register_blueprint(alerts.bp, url_prefix='/api/alerts')
     app.register_blueprint(frontend.bp)

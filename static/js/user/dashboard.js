@@ -58,11 +58,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            let html = '<table class="table table-hover"><thead><tr><th>Category</th><th>Title</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead><tbody>';
+            let html = '<table class="table table-hover"><thead><tr><th>Tracking Code</th><th>Category</th><th>Title</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead><tbody>';
             
             data.results.forEach(incident => {
+                const trackingCode = incident.anonymous_tracking_code || '-';
                 html += `
                     <tr>
+                        <td>
+                            <code class="small text-primary">${escapeHtml(trackingCode)}</code>
+                        </td>
                         <td>${escapeHtml(incident.category_name)}</td>
                         <td>${escapeHtml(incident.title || incident.description.substring(0, 50))}</td>
                         <td>${formatStatus(incident.status)}</td>

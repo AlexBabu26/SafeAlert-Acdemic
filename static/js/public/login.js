@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Redirect if already logged in
     if (isAuthenticated()) {
-        window.location.href = '/reports';
+        const userInfo = getUserInfo();
+        redirectBasedOnRole(userInfo);
         return;
     }
 
@@ -30,11 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Redirect based on role
             setTimeout(() => {
-                if (userInfo.is_staff) {
-                    window.location.href = '/admin/dashboard';
-                } else {
-                    window.location.href = '/reports';
-                }
+                redirectBasedOnRole(userInfo);
             }, 500);
         } catch (error) {
             showToast(error.message || 'Login failed. Please check your credentials.', 'error');
@@ -44,3 +41,19 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+function redirectBasedOnRole(userInfo) {
+    if (!userInfo) {
+        window.location.href = '/reports';
+        return;
+    }
+    
+    if (userInfo.is_staff) {
+        window.location.href = '/admin/dashboard';
+    } else if (userInfo.is_department) {
+        window.location.href = '/department/dashboard';
+    } else if (userInfo.is_responder) {
+        window.location.href = '/responder/dashboard';
+    } else {
+        window.location.href = '/reports';
+    }
+}

@@ -320,22 +320,22 @@ class EscalationService:
         return "No supervisors to notify"
     
     def _action_notify_dispatcher(self, incident: IncidentReport) -> str:
-        """Notify all dispatchers"""
+        """Notify all departments"""
         from app.services.notification import NotificationService
         
         notification_service = NotificationService()
         
-        dispatchers = User.query.filter(User.is_dispatcher == True).all()
+        departments = User.query.filter(User.is_department == True).all()
         
-        for dispatcher in dispatchers:
+        for department in departments:
             notification_service.notify_user(
-                dispatcher,
+                department,
                 'ESCALATION_TRIGGERED',
-                f'Incident #{incident.id} requires dispatcher attention',
+                f'Incident #{incident.id} requires department attention',
                 data={'incident_id': incident.id}
             )
         
-        return f"Notified {len(dispatchers)} dispatcher(s)"
+        return f"Notified {len(departments)} department(s)"
     
     def _action_upgrade_severity(self, incident: IncidentReport) -> str:
         """Upgrade incident severity"""

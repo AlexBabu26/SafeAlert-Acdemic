@@ -110,6 +110,24 @@ class AllocationService:
                 score_breakdown=candidate['breakdown'],
                 status=AssignmentStatus.ASSIGNED
             )
+            
+            # Auto-assign to an available respondent from this department
+            available_responders = get_available_responders(candidate['department'].id)
+            if available_responders:
+                # Find the respondent with the least active assignments (load balancing)
+                responder_loads = []
+                for responder in available_responders:
+                    active_count = IncidentAssignment.query.filter(
+                        IncidentAssignment.responder_id == responder.id,
+                        IncidentAssignment.status.in_(AssignmentStatus.ACTIVE_STATUSES)
+                    ).count()
+                    responder_loads.append((responder, active_count))
+                
+                # Sort by load (ascending) and assign to the least busy responder
+                responder_loads.sort(key=lambda x: x[1])
+                selected_responder = responder_loads[0][0]
+                assignment.responder_id = selected_responder.id
+            
             db.session.add(assignment)
             assignments.append(assignment)
             
@@ -377,6 +395,23 @@ class AllocationService:
             status=AssignmentStatus.ASSIGNED,
             notes='Manually added by dispatcher'
         )
+        
+        # Auto-assign to an available respondent from this department
+        available_responders = get_available_responders(department_id)
+        if available_responders:
+            # Find the respondent with the least active assignments (load balancing)
+            responder_loads = []
+            for responder in available_responders:
+                active_count = IncidentAssignment.query.filter(
+                    IncidentAssignment.responder_id == responder.id,
+                    IncidentAssignment.status.in_(AssignmentStatus.ACTIVE_STATUSES)
+                ).count()
+                responder_loads.append((responder, active_count))
+            
+            # Sort by load (ascending) and assign to the least busy responder
+            responder_loads.sort(key=lambda x: x[1])
+            selected_responder = responder_loads[0][0]
+            assignment.responder_id = selected_responder.id
         
         db.session.add(assignment)
         department.increment_active_incidents()

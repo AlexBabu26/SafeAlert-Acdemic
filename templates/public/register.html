@@ -2,6 +2,285 @@
 
 {% block title %}Register - SafeAlert{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Register page specific styles */
+    .sa-auth-card {
+        background: rgba(255, 255, 255, 0.03) !important;
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .sa-auth-card .card-body {
+        color: #e2e8f0;
+    }
+
+    .sa-auth-card h4 {
+        color: #f8fafc;
+    }
+
+    .sa-auth-card .text-muted {
+        color: #94a3b8 !important;
+    }
+
+    /* Form labels - ensure visibility */
+    .sa-auth-card .form-label {
+        color: #cbd5e1 !important;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    /* Form inputs */
+    .sa-auth-card .form-control,
+    .sa-auth-card .form-select {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        color: #f1f5f9;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+    }
+
+    .sa-auth-card .form-control::placeholder {
+        color: #64748b;
+    }
+
+    .sa-auth-card .form-control:focus,
+    .sa-auth-card .form-select:focus {
+        background: rgba(15, 23, 42, 0.8);
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        color: #f1f5f9;
+    }
+
+    .sa-auth-card .form-text {
+        color: #94a3b8;
+    }
+
+    /* Role selector */
+    .role-selector {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .role-card {
+        flex: 1;
+        padding: 1.25rem;
+        border: 2px solid rgba(148, 163, 184, 0.3);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        background: rgba(15, 23, 42, 0.4);
+    }
+    
+    .role-card:hover {
+        border-color: #ff6b35;
+        background: rgba(255, 107, 53, 0.1);
+    }
+    
+    .role-card.selected {
+        border-color: #ff6b35;
+        background: rgba(255, 107, 53, 0.15);
+        box-shadow: 0 0 20px rgba(255, 107, 53, 0.2);
+    }
+    
+    .role-card i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .role-card.citizen i { color: #10b981; }
+    .role-card.department i { color: #f59e0b; }
+    .role-card.responder i { color: #3b82f6; }
+    
+    .role-card h5 {
+        margin-bottom: 0.25rem;
+        font-weight: 600;
+        color: #f1f5f9;
+    }
+    
+    .role-card p {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        margin-bottom: 0;
+    }
+
+    .role-card.selected h5 {
+        color: #fff;
+    }
+    
+    /* Responder fields section */
+    .responder-fields {
+        display: none;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 1.25rem;
+        border-radius: 12px;
+        margin-bottom: 1.25rem;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .responder-fields.show {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .responder-fields h6 {
+        color: #1e293b !important;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    /* Override form styles inside responder-fields for light background */
+    .responder-fields .form-label {
+        color: #334155 !important;
+        font-weight: 600;
+    }
+
+    .responder-fields .form-control,
+    .responder-fields .form-select {
+        background: #475569;
+        border: 1px solid #64748b;
+        color: #f1f5f9;
+    }
+
+    .responder-fields .form-control::placeholder {
+        color: #94a3b8;
+    }
+
+    .responder-fields .form-control:focus,
+    .responder-fields .form-select:focus {
+        background: #475569;
+        border-color: #ff6b35;
+        box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.25);
+        color: #f1f5f9;
+    }
+    
+    /* Pending notice */
+    .pending-notice {
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.25rem;
+        display: none;
+        border: 1px solid #fbbf24;
+    }
+    
+    .pending-notice.show {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+
+    .pending-notice strong {
+        color: #92400e;
+        font-size: 0.95rem;
+    }
+
+    .pending-notice p {
+        color: #78350f !important;
+        margin-bottom: 0;
+    }
+
+    .pending-notice .text-muted {
+        color: #92400e !important;
+    }
+
+    /* Submit button */
+    .sa-auth-card .btn-primary {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        border: none;
+        padding: 0.875rem 1.5rem;
+        font-weight: 600;
+        font-size: 1rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .sa-auth-card .btn-primary:hover {
+        background: linear-gradient(135deg, #1d4ed8, #2563eb);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(37, 99, 235, 0.35);
+    }
+
+    /* Footer link */
+    .sa-auth-card a {
+        color: #3b82f6;
+        font-weight: 500;
+    }
+
+    .sa-auth-card a:hover {
+        color: #60a5fa;
+    }
+
+    /* Required field indicator */
+    .text-danger {
+        color: #f87171 !important;
+    }
+
+    /* Location selection buttons */
+    .location-options .btn {
+        border-radius: 8px;
+        font-size: 0.85rem;
+        padding: 0.5rem 0.875rem;
+    }
+
+    .location-options .btn-outline-primary {
+        border-color: #3b82f6;
+        color: #3b82f6;
+    }
+
+    .location-options .btn-outline-primary:hover {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .location-options .btn-outline-secondary {
+        border-color: #94a3b8;
+        color: #cbd5e1;
+    }
+
+    .location-options .btn-outline-secondary:hover {
+        background: #475569;
+        border-color: #475569;
+        color: #f1f5f9;
+    }
+
+    /* Spinning icon animation */
+    .spin {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    /* Location status messages */
+    #location-status {
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    #location-status i {
+        margin-right: 0.25rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="sa-auth-wrap">
     <div class="row justify-content-center">
@@ -13,10 +292,42 @@
                             <i class="bi bi-person-plus text-primary fs-4"></i>
                         </div>
                         <h4 class="mt-3 mb-1 fw-bold">Create your account</h4>
-                        <p class="text-muted mb-0">Start reporting incidents securely in minutes.</p>
+                        <p class="text-muted mb-0">Join SafeAlert to help keep our community safe</p>
+                    </div>
+
+                    <!-- Role Selector -->
+                    <div class="role-selector">
+                        <div class="role-card citizen selected" onclick="selectRole('citizen')">
+                            <i class="bi bi-person"></i>
+                            <h5>Citizen</h5>
+                            <p>Report incidents</p>
+                        </div>
+                        <div class="role-card department" onclick="selectRole('department')">
+                            <i class="bi bi-building"></i>
+                            <h5>Department</h5>
+                            <p>Manage & allocate tasks</p>
+                        </div>
+                        <div class="role-card responder" onclick="selectRole('responder')">
+                            <i class="bi bi-person-badge"></i>
+                            <h5>Respondent</h5>
+                            <p>Respond to incidents</p>
+                        </div>
+                    </div>
+
+                    <!-- Pending Approval Notice - Shows for ALL roles -->
+                    <div class="pending-notice show" id="pending-notice">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-info-circle text-warning fs-4 me-3"></i>
+                            <div>
+                                <strong id="approval-title">All accounts require admin approval</strong>
+                                <p class="mb-0 small text-muted" id="approval-text">Your account will be reviewed by an administrator before you can login.</p>
+                            </div>
+                        </div>
                     </div>
 
                     <form id="register-form">
+                        <input type="hidden" id="role" value="citizen">
+                        
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="first_name" class="form-label">First Name</label>
@@ -36,14 +347,83 @@
                             <input type="email" class="form-control" id="email">
                         </div>
                         <div class="mb-3">
+                            <label for="phone_number" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone_number" placeholder="+1 (555) 123-4567">
+                        </div>
+                        
+                        <!-- Department-specific fields (Creates NEW department/office) -->
+                        <div class="responder-fields" id="department-fields">
+                            <h6 class="mb-3"><i class="bi bi-building text-warning"></i> Register Your Office/Station</h6>
+                            <p class="form-text mb-3" style="color: #94a3b8;">Register your office/station (e.g., Downtown Fire Station, Central Police Station)</p>
+                            
+                            <div class="mb-3">
+                                <label for="department_name" class="form-label">Office/Station Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="department_name" placeholder="e.g., Downtown Fire Station">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="department_type" class="form-label">Department Type <span class="text-danger">*</span></label>
+                                <select class="form-select" id="department_type">
+                                    <option value="">Select department type...</option>
+                                </select>
+                                <small class="form-text">What type of emergency service does this office provide?</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="department_code" class="form-label">Department Code (Optional)</label>
+                                <input type="text" class="form-control" id="department_code" placeholder="e.g., FD-001 (auto-generated if empty)">
+                                <small class="form-text">Leave empty to auto-generate based on type</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Office Location <span class="text-danger">*</span></label>
+                                <small class="text-muted d-block mb-2">Where is your office/station located? This helps route nearby incidents.</small>
+                                <div class="location-options mb-2 d-flex gap-2 flex-wrap">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="detectDeptLocation()">
+                                        <i class="bi bi-geo-alt-fill"></i> Detect Current Location
+                                    </button>
+                                </div>
+                                <select class="form-select mb-2" id="dept_area_select" onchange="selectDeptArea(this.value)">
+                                    <option value="">Or select a predefined area...</option>
+                                </select>
+                                <input type="text" class="form-control mb-2" id="dept_address" placeholder="Full address of your office/station">
+                                <input type="hidden" id="dept_latitude">
+                                <input type="hidden" id="dept_longitude">
+                                <div id="dept-location-status" class="form-text"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Responder-specific fields (Joins EXISTING department) -->
+                        <div class="responder-fields" id="responder-fields">
+                            <h6 class="mb-3"><i class="bi bi-shield-check text-primary"></i> Join a Department</h6>
+                            <p class="form-text mb-3" style="color: #94a3b8;">Select the department/office where you work as a respondent</p>
+                            
+                            <div class="mb-3">
+                                <label for="department_id" class="form-label">Select Department <span class="text-danger">*</span></label>
+                                <select class="form-select" id="department_id">
+                                    <option value="">Select your department...</option>
+                                </select>
+                                <small class="form-text">Choose the department you work for. Your department manager will approve your registration.</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="badge_number" class="form-label">Badge/ID Number</label>
+                                <input type="text" class="form-control" id="badge_number" placeholder="e.g., FD-12345">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
                             <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
                             <input type="password" class="form-control" id="password" required>
+                            <div class="form-text">Must be at least 8 characters</div>
                         </div>
                         <div class="mb-3">
                             <label for="password2" class="form-label">Confirm Password <span class="text-danger">*</span></label>
                             <input type="password" class="form-control" id="password2" required>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100 py-2">Register</button>
+                        <button type="submit" class="btn btn-primary w-100 py-2" id="submit-btn">
+                            <span id="btn-text">Create Account</span>
+                        </button>
                     </form>
 
                     <div class="text-center mt-4">
@@ -57,6 +437,251 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="/static/js/public/register.js"></script>
-{% endblock %}
+<script>
+let selectedRole = 'citizen';
+let departmentsData = [];
+let departmentTypesData = [];
+let areasData = [];
 
+document.addEventListener('DOMContentLoaded', function() {
+    loadDepartments();
+    loadDepartmentTypes();
+    loadAreas();
+});
+
+function selectRole(role) {
+    selectedRole = role;
+    document.getElementById('role').value = role;
+    
+    // Update UI
+    document.querySelectorAll('.role-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    document.querySelector(`.role-card.${role}`).classList.add('selected');
+    
+    // Show/hide role-specific fields
+    const responderFields = document.getElementById('responder-fields');
+    const departmentFields = document.getElementById('department-fields');
+    const approvalTitle = document.getElementById('approval-title');
+    const approvalText = document.getElementById('approval-text');
+    
+    // Hide all role-specific fields first
+    responderFields.classList.remove('show');
+    departmentFields.classList.remove('show');
+    
+    if (role === 'responder') {
+        responderFields.classList.add('show');
+        approvalTitle.textContent = 'Respondent accounts require approval';
+        approvalText.textContent = 'Your account will be reviewed by your department manager or an administrator before activation.';
+    } else if (role === 'department') {
+        departmentFields.classList.add('show');
+        approvalTitle.textContent = 'Department registration requires admin approval';
+        approvalText.textContent = 'Both your office/station and your account will be reviewed and activated by an administrator.';
+    } else {
+        approvalTitle.textContent = 'All accounts require admin approval';
+        approvalText.textContent = 'Your account will be reviewed by an administrator before you can login.';
+    }
+}
+
+// Load existing departments for responder registration
+function loadDepartments() {
+    fetch('/api/auth/departments/')
+        .then(res => res.json())
+        .then(departments => {
+            departmentsData = departments;
+            
+            const responderSelect = document.getElementById('department_id');
+            
+            if (departments.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No departments available yet';
+                option.disabled = true;
+                responderSelect.appendChild(option);
+            } else {
+                departments.forEach(dept => {
+                    const option = document.createElement('option');
+                    option.value = dept.id;
+                    option.textContent = `${dept.name} (${dept.type_display})`;
+                    option.dataset.address = dept.address;
+                    responderSelect.appendChild(option);
+                });
+            }
+        })
+        .catch(err => console.error('Error loading departments:', err));
+}
+
+// Load department types for new department registration
+function loadDepartmentTypes() {
+    fetch('/api/auth/department-types/')
+        .then(res => res.json())
+        .then(types => {
+            departmentTypesData = types;
+            
+            const typeSelect = document.getElementById('department_type');
+            
+            types.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type.type;
+                option.textContent = `${type.icon} ${type.name}`;
+                option.dataset.description = type.description;
+                typeSelect.appendChild(option);
+            });
+        })
+        .catch(err => console.error('Error loading department types:', err));
+}
+
+function loadAreas() {
+    fetch('/api/auth/areas/')
+        .then(res => res.json())
+        .then(areas => {
+            areasData = areas;
+            
+            // For department registration
+            const deptAreaSelect = document.getElementById('dept_area_select');
+            
+            areas.forEach(area => {
+                const option = document.createElement('option');
+                option.value = JSON.stringify({lat: area.latitude, lng: area.longitude, name: area.name});
+                option.textContent = area.name;
+                deptAreaSelect.appendChild(option);
+            });
+        })
+        .catch(err => console.error('Error loading areas:', err));
+}
+
+// Department location detection
+function detectDeptLocation() {
+    const status = document.getElementById('dept-location-status');
+    
+    if (!navigator.geolocation) {
+        status.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Geolocation not supported by your browser</span>';
+        return;
+    }
+    
+    status.innerHTML = '<span class="text-info"><i class="bi bi-arrow-repeat spin"></i> Detecting location...</span>';
+    
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            document.getElementById('dept_latitude').value = position.coords.latitude;
+            document.getElementById('dept_longitude').value = position.coords.longitude;
+            status.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> Location detected successfully!</span>';
+        },
+        (error) => {
+            status.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Could not detect location. Please select an area instead.</span>';
+            console.error('Geolocation error:', error);
+        }
+    );
+}
+
+function selectDeptArea(value) {
+    const status = document.getElementById('dept-location-status');
+    
+    if (!value) {
+        status.innerHTML = '';
+        return;
+    }
+    
+    const area = JSON.parse(value);
+    document.getElementById('dept_latitude').value = area.lat;
+    document.getElementById('dept_longitude').value = area.lng;
+    if (!document.getElementById('dept_address').value) {
+        document.getElementById('dept_address').value = area.name;
+    }
+    status.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill"></i> Selected area: ${area.name}</span>`;
+}
+
+document.getElementById('register-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const role = document.getElementById('role').value;
+    const username = document.getElementById('username').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const password2 = document.getElementById('password2').value;
+    
+    // Basic validation
+    if (password !== password2) {
+        showToast('Passwords do not match', 'error');
+        return;
+    }
+    
+    if (password.length < 8) {
+        showToast('Password must be at least 8 characters', 'error');
+        return;
+    }
+    
+    // Role-specific validation
+    if (role === 'responder' && !document.getElementById('department_id').value) {
+        showToast('Please select a department to join', 'error');
+        return;
+    }
+    
+    if (role === 'department') {
+        if (!document.getElementById('department_name').value) {
+            showToast('Please enter your office/station name', 'error');
+            return;
+        }
+        if (!document.getElementById('department_type').value) {
+            showToast('Please select a department type', 'error');
+            return;
+        }
+        if (!document.getElementById('dept_latitude').value || !document.getElementById('dept_longitude').value) {
+            showToast('Please set your office location', 'error');
+            return;
+        }
+    }
+    
+    // Build request data
+    const data = {
+        username,
+        email: email || null,
+        first_name: document.getElementById('first_name').value,
+        last_name: document.getElementById('last_name').value,
+        phone_number: document.getElementById('phone_number').value,
+        password,
+        password2,
+        role
+    };
+    
+    // Add department registration fields (creates new department)
+    if (role === 'department') {
+        data.department_name = document.getElementById('department_name').value;
+        data.department_type = document.getElementById('department_type').value;
+        data.department_code = document.getElementById('department_code').value || null;
+        data.address = document.getElementById('dept_address').value;
+        data.latitude = parseFloat(document.getElementById('dept_latitude').value);
+        data.longitude = parseFloat(document.getElementById('dept_longitude').value);
+    }
+    
+    // Add responder fields (joins existing department)
+    if (role === 'responder') {
+        data.department_id = parseInt(document.getElementById('department_id').value);
+        data.badge_number = document.getElementById('badge_number').value || null;
+    }
+    
+    try {
+        showLoader();
+        const response = await apiPost(API_ENDPOINTS.auth.register, data);
+        
+        // Show success message
+        showToast(response.message || 'Account created! Awaiting admin approval.', 'success');
+        
+        // Redirect to login page after a delay
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 3000);
+    } catch (error) {
+        // Handle validation errors
+        if (typeof error.message === 'object') {
+            const messages = Object.values(error.message).flat().join(', ');
+            showToast(messages, 'error');
+        } else {
+            showToast(error.message || 'Registration failed', 'error');
+        }
+    } finally {
+        hideLoader();
+    }
+});
+</script>
+{% endblock %}

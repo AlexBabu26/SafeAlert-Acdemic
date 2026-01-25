@@ -35,12 +35,13 @@ def register_commands(app):
         
         click.echo(f'Successfully created admin user: {username}')
     
-    @app.cli.command('create-dispatcher')
-    @click.option('--username', prompt=True, help='Dispatcher username')
-    @click.option('--email', prompt=True, help='Dispatcher email')
+    @app.cli.command('create-department-user')
+    @click.option('--username', prompt=True, help='Department user username')
+    @click.option('--email', prompt=True, help='Department user email')
     @click.option('--password', prompt=True, hide_input=True, confirmation_prompt=True, help='Password')
-    def create_dispatcher(username, email, password):
-        """Create a dispatcher user"""
+    @click.option('--department-id', prompt=True, type=int, help='Department ID this user belongs to')
+    def create_department_user(username, email, password, department_id):
+        """Create a department user (task allocator)"""
         if User.query.filter_by(username=username).first():
             click.echo(f'Error: User "{username}" already exists.')
             return
@@ -49,17 +50,28 @@ def register_commands(app):
             click.echo(f'Error: User with email "{email}" already exists.')
             return
         
+        # Validate department
+        department = Department.query.get(department_id)
+        if not department:
+            click.echo(f'Error: Department with ID {department_id} not found.')
+            click.echo('Available departments:')
+            for dept in Department.query.all():
+                click.echo(f'  - {dept.id}: {dept.name} ({dept.code})')
+            return
+        
         user = User(
             username=username,
             email=email,
-            is_dispatcher=True
+            is_department=True,
+            department_id=department_id
         )
         user.set_password(password)
         
         db.session.add(user)
         db.session.commit()
         
-        click.echo(f'Successfully created dispatcher user: {username}')
+        click.echo(f'Successfully created department user: {username}')
+        click.echo(f'Assigned to department: {department.name} ({department.code})')
     
     @app.cli.command('create-responder')
     @click.option('--username', prompt=True, help='Responder username')
@@ -371,17 +383,23 @@ def register_commands(app):
             click.echo(f'    Capacity: {dept.current_active_incidents}/{dept.max_concurrent_incidents}')
     
     @app.cli.command('list-users')
-    @click.option('--role', type=click.Choice(['admin', 'dispatcher', 'responder', 'all']), default='all')
+    @click.option('--role', type=click.Choice(['admin', 'department', 'responder', 'citizen', 'all']), default='all')
     def list_users(role):
         """List users by role"""
         query = User.query
         
         if role == 'admin':
             query = query.filter(User.is_staff == True)
-        elif role == 'dispatcher':
-            query = query.filter(User.is_dispatcher == True)
+        elif role == 'department':
+            query = query.filter(User.is_department == True)
         elif role == 'responder':
             query = query.filter(User.is_responder == True)
+        elif role == 'citizen':
+            query = query.filter(
+                User.is_staff == False,
+                User.is_department == False,
+                User.is_responder == False
+            )
         
         users = query.order_by(User.username).all()
         
@@ -394,4 +412,5 @@ def register_commands(app):
         for user in users:
             roles = user.role_display
             dept = f' [{user.department.code}]' if user.department else ''
-            click.echo(f'{user.username} ({roles}){dept}')
+            status = '✓' if user.is_active else '(pending)'
+            click.echo(f'{status} {user.username} ({roles}){dept}')

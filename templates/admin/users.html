@@ -1,0 +1,720 @@
+{% extends 'base.html' %}
+
+{% block title %}User Management - SafeAlert Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .user-management-header {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+        padding: 2rem 0;
+        color: white;
+        margin-bottom: 2rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        text-align: center;
+    }
+
+    .stat-card .value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1e3a5f;
+    }
+
+    .stat-card .label {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-top: 0.25rem;
+    }
+
+    .stat-card.pending .value { color: #f59e0b; }
+    .stat-card.active .value { color: #10b981; }
+    .stat-card.inactive .value { color: #ef4444; }
+
+    .filters-bar {
+        background: white;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    .user-table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    .user-table table {
+        margin-bottom: 0;
+    }
+
+    .user-table th {
+        background: #f8fafc;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #475569;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .user-table td {
+        vertical-align: middle;
+        padding: 1rem;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ff6b35, #ff8c5a);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .role-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .role-badge.admin { background: #fef2f2; color: #dc2626; }
+    .role-badge.department { background: #fff7ed; color: #ea580c; }
+    .role-badge.responder { background: #dbeafe; color: #2563eb; }
+    .role-badge.citizen { background: #f0fdf4; color: #16a34a; }
+
+    .status-toggle {
+        width: 50px;
+        height: 26px;
+        background: #e2e8f0;
+        border-radius: 13px;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .status-toggle.active {
+        background: #10b981;
+    }
+
+    .status-toggle::after {
+        content: '';
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        background: white;
+        border-radius: 50%;
+        top: 2px;
+        left: 2px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .status-toggle.active::after {
+        left: calc(100% - 24px);
+    }
+
+    .action-btn {
+        padding: 0.5rem 0.75rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .action-btn.view {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .action-btn.view:hover {
+        background: #e2e8f0;
+    }
+
+    .pagination-container {
+        padding: 1rem;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .pending-alert {
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        border: none;
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .pending-alert .count {
+        background: #f59e0b;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+
+    /* Modal styles */
+    .modal-content {
+        border-radius: 16px;
+        border: none;
+    }
+
+    .modal-header {
+        background: #1e3a5f;
+        color: white;
+        border-radius: 16px 16px 0 0;
+    }
+
+    .modal-header .btn-close {
+        filter: invert(1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="user-management-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3 mb-1">User Management</h1>
+                <p class="mb-0 opacity-75">Manage all users, departments, and responders</p>
+            </div>
+            <button class="btn btn-light" onclick="showAddUserModal()">
+                <i class="bi bi-plus-lg"></i> Add User
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Stats -->
+    <div class="stats-grid" id="stats-grid">
+        <div class="stat-card">
+            <div class="value" id="stat-total">-</div>
+            <div class="label">Total Users</div>
+        </div>
+        <div class="stat-card active">
+            <div class="value" id="stat-active">-</div>
+            <div class="label">Active</div>
+        </div>
+        <div class="stat-card inactive">
+            <div class="value" id="stat-inactive">-</div>
+            <div class="label">Inactive</div>
+        </div>
+        <div class="stat-card pending">
+            <div class="value" id="stat-pending">-</div>
+            <div class="label">Pending Approval</div>
+        </div>
+        <div class="stat-card">
+            <div class="value" id="stat-responders">-</div>
+            <div class="label">Responders</div>
+        </div>
+        <div class="stat-card">
+            <div class="value" id="stat-on-duty">-</div>
+            <div class="label">On Duty</div>
+        </div>
+    </div>
+
+    <!-- Pending Alert -->
+    <div class="pending-alert" id="pending-alert" style="display: none;">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-clock-history text-warning fs-4 me-3"></i>
+            <div>
+                <strong>Users Pending Approval</strong>
+                <span class="count" id="pending-count">0</span>
+                <p class="mb-0 small text-muted">New responder registrations require your approval</p>
+            </div>
+        </div>
+        <button class="btn btn-warning" onclick="filterByPending()">Review Now</button>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-bar">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small">Search</label>
+                <input type="text" class="form-control" id="filter-search" placeholder="Username, email, badge...">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Role</label>
+                <select class="form-select" id="filter-role">
+                    <option value="">All Roles</option>
+                    <option value="citizen">Citizens</option>
+                    <option value="responder">Responders</option>
+                    <option value="department">Departments</option>
+                    <option value="admin">Admins</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Status</label>
+                <select class="form-select" id="filter-status">
+                    <option value="">All Status</option>
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Department</label>
+                <select class="form-select" id="filter-department">
+                    <option value="">All Departments</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button class="btn btn-primary flex-grow-1" onclick="applyFilters()">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+                <button class="btn btn-outline-secondary" onclick="clearFilters()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="user-table">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>Department</th>
+                    <th>Joined</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="users-tbody">
+                <tr>
+                    <td colspan="6" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="pagination-container" id="pagination-container">
+            <!-- Pagination will be rendered here -->
+        </div>
+    </div>
+</div>
+
+<!-- User Detail Modal -->
+<div class="modal fade" id="userDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">User Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="user-detail-content">
+                <!-- Content loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="save-user-btn" onclick="saveUserChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const API_BASE = '/api/admin/users';
+let currentPage = 1;
+let currentUserId = null;
+let departments = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadStats();
+    loadUsers();
+    loadDepartments();
+    
+    // Search on enter
+    document.getElementById('filter-search').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') applyFilters();
+    });
+});
+
+function loadStats() {
+    apiRequest(`${API_BASE}/stats/`)
+        .then(data => {
+            document.getElementById('stat-total').textContent = data.total;
+            document.getElementById('stat-active').textContent = data.active;
+            document.getElementById('stat-inactive').textContent = data.inactive;
+            document.getElementById('stat-pending').textContent = data.pending_responders;
+            document.getElementById('stat-responders').textContent = data.by_role.responders;
+            document.getElementById('stat-on-duty').textContent = data.responders_on_duty;
+            
+            // Show pending alert if there are pending users
+            if (data.pending_responders > 0) {
+                document.getElementById('pending-alert').style.display = 'flex';
+                document.getElementById('pending-count').textContent = data.pending_responders;
+            }
+        })
+        .catch(err => console.error('Error loading stats:', err));
+}
+
+function loadDepartments() {
+    apiRequest('/api/dispatcher/departments/')
+        .then(data => {
+            departments = data;
+            const select = document.getElementById('filter-department');
+            data.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept.id;
+                option.textContent = `${dept.name} (${dept.type})`;
+                select.appendChild(option);
+            });
+        })
+        .catch(err => console.error('Error loading departments:', err));
+}
+
+function loadUsers(page = 1) {
+    currentPage = page;
+    
+    const search = document.getElementById('filter-search').value;
+    const role = document.getElementById('filter-role').value;
+    const status = document.getElementById('filter-status').value;
+    const department = document.getElementById('filter-department').value;
+    
+    let url = `${API_BASE}/?page=${page}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    if (role) url += `&role=${role}`;
+    if (status) url += `&is_active=${status}`;
+    if (department) url += `&department_id=${department}`;
+    
+    apiRequest(url)
+        .then(data => {
+            renderUsersTable(data.results);
+            renderPagination(data);
+        })
+        .catch(err => {
+            console.error('Error loading users:', err);
+            document.getElementById('users-tbody').innerHTML = 
+                '<tr><td colspan="6" class="text-center text-danger py-4">Error loading users</td></tr>';
+        });
+}
+
+function renderUsersTable(users) {
+    const tbody = document.getElementById('users-tbody');
+    
+    if (!users.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No users found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = users.map(user => `
+        <tr>
+            <td>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="user-avatar">${getInitials(user)}</div>
+                    <div>
+                        <div class="fw-semibold">${user.username}</div>
+                        <div class="small text-muted">${user.email || 'No email'}</div>
+                        ${user.badge_number ? `<div class="small text-primary">Badge: ${user.badge_number}</div>` : ''}
+                    </div>
+                </div>
+            </td>
+            <td>
+                <span class="role-badge ${getRoleClass(user)}">${user.role_display || 'Citizen'}</span>
+            </td>
+            <td>
+                ${user.department_id ? getDepartmentName(user.department_id) : '<span class="text-muted">-</span>'}
+            </td>
+            <td>
+                <div class="small">${formatDate(user.date_joined)}</div>
+                ${user.last_login ? `<div class="small text-muted">Last: ${formatDate(user.last_login)}</div>` : ''}
+            </td>
+            <td>
+                <div class="status-toggle ${user.is_active ? 'active' : ''}" 
+                     onclick="toggleUserStatus(${user.id}, ${!user.is_active})"
+                     title="${user.is_active ? 'Active - Click to deactivate' : 'Inactive - Click to activate'}">
+                </div>
+            </td>
+            <td>
+                <button class="action-btn view" onclick="viewUser(${user.id})">
+                    <i class="bi bi-eye"></i> View
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function renderPagination(data) {
+    const container = document.getElementById('pagination-container');
+    
+    if (data.pages <= 1) {
+        container.innerHTML = `<div class="text-muted small">Showing ${data.total} user(s)</div>`;
+        return;
+    }
+    
+    let html = '<nav><ul class="pagination pagination-sm mb-0 justify-content-center">';
+    
+    // Previous
+    html += `<li class="page-item ${!data.has_prev ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="loadUsers(${currentPage - 1}); return false;">Previous</a>
+    </li>`;
+    
+    // Page numbers
+    for (let i = 1; i <= data.pages; i++) {
+        if (i === 1 || i === data.pages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+            html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="loadUsers(${i}); return false;">${i}</a>
+            </li>`;
+        } else if (i === currentPage - 3 || i === currentPage + 3) {
+            html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+        }
+    }
+    
+    // Next
+    html += `<li class="page-item ${!data.has_next ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="loadUsers(${currentPage + 1}); return false;">Next</a>
+    </li>`;
+    
+    html += '</ul></nav>';
+    html += `<div class="text-muted small text-center mt-2">Page ${data.page} of ${data.pages} (${data.total} total)</div>`;
+    
+    container.innerHTML = html;
+}
+
+function toggleUserStatus(userId, activate) {
+    const action = activate ? 'activate' : 'deactivate';
+    
+    if (!confirm(`Are you sure you want to ${action} this user?`)) return;
+    
+    apiRequest(`${API_BASE}/${userId}/${action}/`, { method: 'POST' })
+        .then(data => {
+            showToast(data.message, 'success');
+            loadUsers(currentPage);
+            loadStats();
+        })
+        .catch(err => {
+            showToast(err.message || `Failed to ${action} user`, 'error');
+        });
+}
+
+function viewUser(userId) {
+    currentUserId = userId;
+    
+    apiRequest(`${API_BASE}/${userId}/`)
+        .then(user => {
+            const content = document.getElementById('user-detail-content');
+            
+            // Determine what department info to show
+            let departmentSection = '';
+            if (user.is_department) {
+                // For department users, show their managed department info
+                const deptInfo = user.department_id ? getDepartmentInfo(user.department_id) : null;
+                departmentSection = `
+                    <div class="mb-3">
+                        <label class="form-label small">Managed Department</label>
+                        <input type="text" class="form-control" value="${deptInfo ? deptInfo.name : 'Not assigned'}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Department Type</label>
+                        <input type="text" class="form-control" value="${deptInfo ? deptInfo.type : 'N/A'}" disabled>
+                    </div>
+                `;
+            } else if (user.is_responder) {
+                // For responders, show department selection and badge
+                departmentSection = `
+                    <div class="mb-3">
+                        <label class="form-label small">Department</label>
+                        <select class="form-select" id="edit-department">
+                            <option value="">No Department</option>
+                            ${departments.map(d => 
+                                `<option value="${d.id}" ${user.department_id === d.id ? 'selected' : ''}>${d.name} (${d.type})</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Badge Number</label>
+                        <input type="text" class="form-control" id="edit-badge" value="${user.badge_number || ''}">
+                    </div>
+                `;
+            }
+            
+            content.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-3">Basic Information</h6>
+                        <div class="mb-3">
+                            <label class="form-label small">Username</label>
+                            <input type="text" class="form-control" value="${user.username}" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Email</label>
+                            <input type="text" class="form-control" value="${user.email || ''}" disabled>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label small">First Name</label>
+                                <input type="text" class="form-control" value="${user.first_name || ''}" disabled>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label small">Last Name</label>
+                                <input type="text" class="form-control" value="${user.last_name || ''}" disabled>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Phone</label>
+                            <input type="text" class="form-control" value="${user.phone_number || ''}" disabled>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-3">Role & Status</h6>
+                        <div class="mb-3">
+                            <label class="form-label small">Account Status</label>
+                            <select class="form-select" id="edit-is-active">
+                                <option value="true" ${user.is_active ? 'selected' : ''}>Active</option>
+                                <option value="false" ${!user.is_active ? 'selected' : ''}>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Roles</label>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="edit-is-staff" ${user.is_staff ? 'checked' : ''}>
+                                <label class="form-check-label">Admin</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="edit-is-department" ${user.is_department ? 'checked' : ''}>
+                                <label class="form-check-label">Department</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="edit-is-responder" ${user.is_responder ? 'checked' : ''}>
+                                <label class="form-check-label">Responder</label>
+                            </div>
+                        </div>
+                        ${departmentSection}
+                    </div>
+                </div>
+                <hr>
+                <div class="row text-muted small">
+                    <div class="col">Joined: ${formatDate(user.date_joined)}</div>
+                    <div class="col">Last Login: ${user.last_login ? formatDate(user.last_login) : 'Never'}</div>
+                </div>
+            `;
+            
+            new bootstrap.Modal(document.getElementById('userDetailModal')).show();
+        })
+        .catch(err => {
+            showToast('Error loading user details', 'error');
+        });
+}
+
+function saveUserChanges() {
+    if (!currentUserId) return;
+    
+    const data = {
+        is_active: document.getElementById('edit-is-active').value === 'true',
+        is_staff: document.getElementById('edit-is-staff').checked,
+        is_department: document.getElementById('edit-is-department').checked,
+        is_responder: document.getElementById('edit-is-responder').checked,
+    };
+    
+    // Only include department_id and badge_number if the fields exist (responders only)
+    const deptSelect = document.getElementById('edit-department');
+    const badgeInput = document.getElementById('edit-badge');
+    
+    if (deptSelect) {
+        data.department_id = deptSelect.value || null;
+    }
+    if (badgeInput) {
+        data.badge_number = badgeInput.value || null;
+    }
+    
+    apiRequest(`${API_BASE}/${currentUserId}/`, {
+        method: 'PATCH',
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        showToast('User updated successfully', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('userDetailModal')).hide();
+        loadUsers(currentPage);
+        loadStats();
+    })
+    .catch(err => {
+        showToast(err.message || 'Error updating user', 'error');
+    });
+}
+
+function applyFilters() {
+    loadUsers(1);
+}
+
+function clearFilters() {
+    document.getElementById('filter-search').value = '';
+    document.getElementById('filter-role').value = '';
+    document.getElementById('filter-status').value = '';
+    document.getElementById('filter-department').value = '';
+    loadUsers(1);
+}
+
+function filterByPending() {
+    document.getElementById('filter-status').value = 'false';
+    document.getElementById('filter-role').value = 'responder';
+    loadUsers(1);
+}
+
+function getInitials(user) {
+    if (user.first_name && user.last_name) {
+        return (user.first_name[0] + user.last_name[0]).toUpperCase();
+    }
+    return user.username.substring(0, 2).toUpperCase();
+}
+
+function getRoleClass(user) {
+    if (user.is_staff) return 'admin';
+    if (user.is_department) return 'department';
+    if (user.is_responder) return 'responder';
+    return 'citizen';
+}
+
+function getDepartmentInfo(deptId) {
+    const dept = departments.find(d => d.id === deptId);
+    return dept || null;
+}
+
+function getDepartmentName(deptId) {
+    const dept = departments.find(d => d.id === deptId);
+    return dept ? dept.name : `Dept #${deptId}`;
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric'
+    });
+}
+
+function showAddUserModal() {
+    // Could implement a create user modal here
+    showToast('Use CLI commands to create admin/dispatcher users', 'info');
+}
+</script>
+{% endblock %}
+

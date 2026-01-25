@@ -19,10 +19,13 @@ class User(db.Model):
     phone_number = db.Column(db.String(20), nullable=True)
     profile_picture = db.Column(db.String(255), nullable=True)
     
+    # Account status
+    is_active = db.Column(db.Boolean, default=True, nullable=False)  # Active/Deactivated
+    
     # Role flags (users can have multiple roles)
     is_staff = db.Column(db.Boolean, default=False, nullable=False)  # Admin
-    is_dispatcher = db.Column(db.Boolean, default=False, nullable=False)  # Dispatcher
-    is_responder = db.Column(db.Boolean, default=False, nullable=False)  # Field responder
+    is_department = db.Column(db.Boolean, default=False, nullable=False)  # Department (task allocator)
+    is_responder = db.Column(db.Boolean, default=False, nullable=False)  # Respondent (field worker)
     
     # Responder-specific fields
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id', ondelete='SET NULL'), nullable=True, index=True)
@@ -43,6 +46,10 @@ class User(db.Model):
     home_latitude = db.Column(db.Numeric(9, 6), nullable=True)
     home_longitude = db.Column(db.Numeric(9, 6), nullable=True)
     
+    # Password reset
+    reset_token = db.Column(db.String(100), nullable=True, unique=True)
+    reset_token_expiry = db.Column(db.DateTime, nullable=True)
+    
     # Notification preferences
     push_token = db.Column(db.String(255), nullable=True)  # For push notifications
     notification_preferences = db.Column(db.JSON, nullable=True)  # {"sms": true, "email": true, "push": true}
@@ -59,7 +66,7 @@ class User(db.Model):
     notifications = db.relationship('Notification', backref='user', lazy='dynamic', cascade='all, delete-orphan')
     
     __table_args__ = (
-        db.Index('idx_user_role', 'is_staff', 'is_dispatcher', 'is_responder'),
+        db.Index('idx_user_role', 'is_staff', 'is_department', 'is_responder'),
         db.Index('idx_user_department', 'department_id'),
         db.Index('idx_user_on_duty', 'is_on_duty', 'is_available'),
     )
@@ -87,10 +94,10 @@ class User(db.Model):
         roles = []
         if self.is_staff:
             roles.append('Admin')
-        if self.is_dispatcher:
-            roles.append('Dispatcher')
+        if self.is_department:
+            roles.append('Department')
         if self.is_responder:
-            roles.append('Responder')
+            roles.append('Respondent')
         if not roles:
             roles.append('Citizen')
         return ', '.join(roles)
