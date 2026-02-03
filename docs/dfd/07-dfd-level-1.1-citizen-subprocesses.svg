@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 700" width="1100" height="700">
+  <defs>
+    <style>
+      .entity { fill: none; stroke: #333; stroke-width: 2; }
+      .process { fill: #e8f4fc; stroke: #333; stroke-width: 2; }
+      .subprocess { fill: #f0f7e6; stroke: #333; stroke-width: 1.5; }
+      .datastore-line { stroke: #333; stroke-width: 2; }
+      .arrow { fill: none; stroke: #333; stroke-width: 1.5; marker-end: url(#arrowhead); }
+      .label { font-family: Arial, sans-serif; font-size: 11px; fill: #333; }
+      .title { font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; fill: #333; }
+      .section { font-family: Arial, sans-serif; font-size: 13px; font-weight: bold; fill: #555; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#333"/>
+    </marker>
+  </defs>
+  
+  <!-- Title -->
+  <text x="550" y="30" class="title" text-anchor="middle">DFD Level 1.1 - Citizen Module Sub-processes (Merged)</text>
+  
+  <!-- External Entity - Citizen -->
+  <rect x="25" y="300" width="90" height="45" class="entity"/>
+  <text x="70" y="327" class="label" text-anchor="middle">CITIZEN</text>
+  
+  <!-- Login -->
+  <ellipse cx="170" cy="322" rx="45" ry="20" class="process"/>
+  <text x="170" y="326" class="label" text-anchor="middle">Login</text>
+  
+  <!-- ====== INCIDENT REPORTING SECTION ====== -->
+  <text x="350" y="55" class="section" text-anchor="middle">2.1 Incident Reporting</text>
+  <rect x="250" y="65" width="200" height="130" rx="8" fill="#fafafa" stroke="#ccc" stroke-dasharray="5,3"/>
+  
+  <ellipse cx="300" cy="95" rx="40" ry="16" class="subprocess"/>
+  <text x="300" y="99" class="label" text-anchor="middle">Select Category</text>
+  
+  <ellipse cx="400" cy="95" rx="40" ry="16" class="subprocess"/>
+  <text x="400" y="99" class="label" text-anchor="middle">Enter Details</text>
+  
+  <ellipse cx="300" cy="140" rx="40" ry="16" class="subprocess"/>
+  <text x="300" y="144" class="label" text-anchor="middle">Set Location</text>
+  
+  <ellipse cx="400" cy="140" rx="40" ry="16" class="subprocess"/>
+  <text x="400" y="144" class="label" text-anchor="middle">Upload Media</text>
+  
+  <ellipse cx="350" cy="175" rx="45" ry="16" class="subprocess"/>
+  <text x="350" y="179" class="label" text-anchor="middle">Submit Report</text>
+  
+  <!-- ====== STATUS TRACKING SECTION ====== -->
+  <text x="350" y="215" class="section" text-anchor="middle">2.2 Status Tracking</text>
+  <rect x="250" y="225" width="200" height="100" rx="8" fill="#fafafa" stroke="#ccc" stroke-dasharray="5,3"/>
+  
+  <ellipse cx="300" cy="255" rx="40" ry="16" class="subprocess"/>
+  <text x="300" y="259" class="label" text-anchor="middle">View Reports</text>
+  
+  <ellipse cx="400" cy="255" rx="40" ry="16" class="subprocess"/>
+  <text x="400" y="259" class="label" text-anchor="middle">Track by Code</text>
+  
+  <ellipse cx="350" cy="295" rx="50" ry="16" class="subprocess"/>
+  <text x="350" y="299" class="label" text-anchor="middle">View History</text>
+  
+  <!-- ====== PROFILE & ALERTS SECTION ====== -->
+  <text x="350" y="350" class="section" text-anchor="middle">2.3 Profile &amp; 2.4 Safety Alerts</text>
+  <rect x="250" y="360" width="200" height="80" rx="8" fill="#fafafa" stroke="#ccc" stroke-dasharray="5,3"/>
+  
+  <ellipse cx="300" cy="390" rx="40" ry="16" class="subprocess"/>
+  <text x="300" y="394" class="label" text-anchor="middle">View Profile</text>
+  
+  <ellipse cx="400" cy="390" rx="40" ry="16" class="subprocess"/>
+  <text x="400" y="394" class="label" text-anchor="middle">View Alerts</text>
+  
+  <!-- ====== COMMUNICATION SECTION ====== -->
+  <text x="350" y="465" class="section" text-anchor="middle">2.5 Communication</text>
+  <rect x="250" y="475" width="200" height="80" rx="8" fill="#fafafa" stroke="#ccc" stroke-dasharray="5,3"/>
+  
+  <ellipse cx="300" cy="505" rx="40" ry="16" class="subprocess"/>
+  <text x="300" y="509" class="label" text-anchor="middle">View Messages</text>
+  
+  <ellipse cx="400" cy="505" rx="40" ry="16" class="subprocess"/>
+  <text x="400" y="509" class="label" text-anchor="middle">Send Message</text>
+  
+  <!-- ====== DATA STORES ====== -->
+  <!-- D2 users -->
+  <g>
+    <line x1="130" y1="420" x2="130" y2="450" class="datastore-line"/>
+    <line x1="130" y1="450" x2="220" y2="450" class="datastore-line"/>
+    <line x1="220" y1="420" x2="220" y2="450" class="datastore-line"/>
+    <text x="175" y="440" class="label" text-anchor="middle">D2 users</text>
+  </g>
+  
+  <!-- D3 incidents -->
+  <g>
+    <line x1="520" y1="70" x2="520" y2="100" class="datastore-line"/>
+    <line x1="520" y1="100" x2="620" y2="100" class="datastore-line"/>
+    <line x1="620" y1="70" x2="620" y2="100" class="datastore-line"/>
+    <text x="570" y="90" class="label" text-anchor="middle">D3 incidents</text>
+  </g>
+  
+  <!-- D7 categories -->
+  <g>
+    <line x1="660" y1="70" x2="660" y2="100" class="datastore-line"/>
+    <line x1="660" y1="100" x2="760" y2="100" class="datastore-line"/>
+    <line x1="760" y1="70" x2="760" y2="100" class="datastore-line"/>
+    <text x="710" y="90" class="label" text-anchor="middle">D7 categories</text>
+  </g>
+  
+  <!-- D9 attachments -->
+  <g>
+    <line x1="520" y1="115" x2="520" y2="145" class="datastore-line"/>
+    <line x1="520" y1="145" x2="630" y2="145" class="datastore-line"/>
+    <line x1="630" y1="115" x2="630" y2="145" class="datastore-line"/>
+    <text x="575" y="135" class="label" text-anchor="middle">D9 attachments</text>
+  </g>
+  
+  <!-- D8 status_history -->
+  <g>
+    <line x1="520" y1="230" x2="520" y2="260" class="datastore-line"/>
+    <line x1="520" y1="260" x2="650" y2="260" class="datastore-line"/>
+    <line x1="650" y1="230" x2="650" y2="260" class="datastore-line"/>
+    <text x="585" y="250" class="label" text-anchor="middle">D8 status_history</text>
+  </g>
+  
+  <!-- D12 assignments -->
+  <g>
+    <line x1="520" y1="275" x2="520" y2="305" class="datastore-line"/>
+    <line x1="520" y1="305" x2="640" y2="305" class="datastore-line"/>
+    <line x1="640" y1="275" x2="640" y2="305" class="datastore-line"/>
+    <text x="580" y="295" class="label" text-anchor="middle">D12 assignments</text>
+  </g>
+  
+  <!-- D10 safety_alerts -->
+  <g>
+    <line x1="520" y1="365" x2="520" y2="395" class="datastore-line"/>
+    <line x1="520" y1="395" x2="640" y2="395" class="datastore-line"/>
+    <line x1="640" y1="365" x2="640" y2="395" class="datastore-line"/>
+    <text x="580" y="385" class="label" text-anchor="middle">D10 safety_alerts</text>
+  </g>
+  
+  <!-- D11 messages -->
+  <g>
+    <line x1="520" y1="480" x2="520" y2="510" class="datastore-line"/>
+    <line x1="520" y1="510" x2="620" y2="510" class="datastore-line"/>
+    <line x1="620" y1="480" x2="620" y2="510" class="datastore-line"/>
+    <text x="570" y="500" class="label" text-anchor="middle">D11 messages</text>
+  </g>
+  
+  <!-- D13 notifications -->
+  <g>
+    <line x1="520" y1="525" x2="520" y2="555" class="datastore-line"/>
+    <line x1="520" y1="555" x2="640" y2="555" class="datastore-line"/>
+    <line x1="640" y1="525" x2="640" y2="555" class="datastore-line"/>
+    <text x="580" y="545" class="label" text-anchor="middle">D13 notifications</text>
+  </g>
+  
+  <!-- ====== ARROWS ====== -->
+  <!-- Citizen to Login -->
+  <path d="M115 322 L120 322" class="arrow"/>
+  
+  <!-- Login to users -->
+  <path d="M170 342 L170 415" class="arrow"/>
+  <path d="M185 435 L170 347" class="arrow"/>
+  
+  <!-- Login to sections -->
+  <path d="M215 310 L255 130" class="arrow"/>
+  <path d="M215 318 L255 270" class="arrow"/>
+  <path d="M215 328 L255 390" class="arrow"/>
+  <path d="M215 335 L255 505" class="arrow"/>
+  
+  <!-- Incident Reporting to Data Stores -->
+  <path d="M440 95 L515 90" class="arrow"/>
+  <path d="M340 95 L655 90" class="arrow"/>
+  <path d="M440 140 L515 135" class="arrow"/>
+  <path d="M395 175 L515 95" class="arrow"/>
+  
+  <!-- Status Tracking to Data Stores -->
+  <path d="M440 255 L515 250" class="arrow"/>
+  <path d="M515 255 L445 260" class="arrow"/>
+  <path d="M400 295 L515 295" class="arrow"/>
+  
+  <!-- Profile & Alerts to Data Stores -->
+  <path d="M340 390 L515 385" class="arrow"/>
+  <path d="M515 390 L345 395" class="arrow"/>
+  
+  <!-- Communication to Data Stores -->
+  <path d="M440 505 L515 500" class="arrow"/>
+  <path d="M515 505 L445 510" class="arrow"/>
+  <path d="M400 521 L515 545" class="arrow"/>
+  <path d="M515 550 L405 526" class="arrow"/>
+  
+  <!-- Legend -->
+  <rect x="700" y="150" width="350" height="160" fill="#f9f9f9" stroke="#ddd" rx="5"/>
+  <text x="875" y="175" class="section" text-anchor="middle">Legend</text>
+  <rect x="720" y="195" width="30" height="20" class="entity"/>
+  <text x="760" y="210" class="label">External Entity</text>
+  <ellipse cx="735" cy="235" rx="15" ry="10" class="process"/>
+  <text x="760" y="240" class="label">Main Process</text>
+  <ellipse cx="735" cy="265" rx="15" ry="10" class="subprocess"/>
+  <text x="760" y="270" class="label">Sub-process</text>
+  <line x1="720" y1="290" x2="750" y2="290" class="arrow"/>
+  <text x="760" y="295" class="label">Data Flow</text>
+</svg>

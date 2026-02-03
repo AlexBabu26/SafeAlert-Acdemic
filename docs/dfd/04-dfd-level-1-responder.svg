@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 950 550" width="950" height="550">
+  <defs>
+    <style>
+      .entity { fill: none; stroke: #333; stroke-width: 2; }
+      .process { fill: #e8f4fc; stroke: #333; stroke-width: 2; }
+      .datastore-line { stroke: #333; stroke-width: 2; }
+      .arrow { fill: none; stroke: #333; stroke-width: 1.5; marker-end: url(#arrowhead); }
+      .label { font-family: Arial, sans-serif; font-size: 12px; fill: #333; }
+      .title { font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; fill: #333; }
+      .flow-label { font-family: Arial, sans-serif; font-size: 9px; fill: #666; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#333"/>
+    </marker>
+  </defs>
+  
+  <!-- Title -->
+  <text x="475" y="35" class="title" text-anchor="middle">DFD Level 1 - Responder Module</text>
+  
+  <!-- External Entity - Responder -->
+  <rect x="30" y="230" width="100" height="50" class="entity"/>
+  <text x="80" y="260" class="label" text-anchor="middle">RESPONDER</text>
+  
+  <!-- Login Process -->
+  <ellipse cx="200" cy="255" rx="50" ry="22" class="process"/>
+  <text x="200" y="252" class="label" text-anchor="middle">3.0</text>
+  <text x="200" y="265" class="label" text-anchor="middle">Login</text>
+  
+  <!-- Users Data Store -->
+  <g>
+    <line x1="160" y1="340" x2="160" y2="375" class="datastore-line"/>
+    <line x1="160" y1="375" x2="270" y2="375" class="datastore-line"/>
+    <line x1="270" y1="340" x2="270" y2="375" class="datastore-line"/>
+    <text x="215" y="362" class="label" text-anchor="middle">D2 users</text>
+  </g>
+  
+  <!-- Main Processes -->
+  <!-- View Assignments -->
+  <ellipse cx="400" cy="90" rx="75" ry="28" class="process"/>
+  <text x="400" y="85" class="label" text-anchor="middle">3.1 View</text>
+  <text x="400" y="100" class="label" text-anchor="middle">Assignments</text>
+  
+  <!-- Accept/Update Assignment -->
+  <ellipse cx="400" cy="180" rx="75" ry="28" class="process"/>
+  <text x="400" y="175" class="label" text-anchor="middle">3.2 Accept/Update</text>
+  <text x="400" y="190" class="label" text-anchor="middle">Assignment</text>
+  
+  <!-- Update Status -->
+  <ellipse cx="400" cy="270" rx="75" ry="28" class="process"/>
+  <text x="400" y="265" class="label" text-anchor="middle">3.3 Update</text>
+  <text x="400" y="280" class="label" text-anchor="middle">Status</text>
+  
+  <!-- Share Location -->
+  <ellipse cx="400" cy="360" rx="75" ry="28" class="process"/>
+  <text x="400" y="355" class="label" text-anchor="middle">3.4 Share</text>
+  <text x="400" y="370" class="label" text-anchor="middle">Location</text>
+  
+  <!-- View Incident Details -->
+  <ellipse cx="400" cy="450" rx="75" ry="28" class="process"/>
+  <text x="400" y="445" class="label" text-anchor="middle">3.5 View Incident</text>
+  <text x="400" y="460" class="label" text-anchor="middle">& Communicate</text>
+  
+  <!-- Data Stores -->
+  <!-- assignments -->
+  <g>
+    <line x1="620" y1="65" x2="620" y2="100" class="datastore-line"/>
+    <line x1="620" y1="100" x2="750" y2="100" class="datastore-line"/>
+    <line x1="750" y1="65" x2="750" y2="100" class="datastore-line"/>
+    <text x="685" y="87" class="label" text-anchor="middle">D12 assignments</text>
+  </g>
+  
+  <!-- notifications -->
+  <g>
+    <line x1="780" y1="65" x2="780" y2="100" class="datastore-line"/>
+    <line x1="780" y1="100" x2="900" y2="100" class="datastore-line"/>
+    <line x1="900" y1="65" x2="900" y2="100" class="datastore-line"/>
+    <text x="840" y="87" class="label" text-anchor="middle">D13 notifications</text>
+  </g>
+  
+  <!-- status_history -->
+  <g>
+    <line x1="620" y1="245" x2="620" y2="280" class="datastore-line"/>
+    <line x1="620" y1="280" x2="750" y2="280" class="datastore-line"/>
+    <line x1="750" y1="245" x2="750" y2="280" class="datastore-line"/>
+    <text x="685" y="267" class="label" text-anchor="middle">D8 status_history</text>
+  </g>
+  
+  <!-- location_data -->
+  <g>
+    <line x1="620" y1="335" x2="620" y2="370" class="datastore-line"/>
+    <line x1="620" y1="370" x2="750" y2="370" class="datastore-line"/>
+    <line x1="750" y1="335" x2="750" y2="370" class="datastore-line"/>
+    <text x="685" y="357" class="label" text-anchor="middle">D14 location_data</text>
+  </g>
+  
+  <!-- incidents -->
+  <g>
+    <line x1="620" y1="425" x2="620" y2="460" class="datastore-line"/>
+    <line x1="620" y1="460" x2="730" y2="460" class="datastore-line"/>
+    <line x1="730" y1="425" x2="730" y2="460" class="datastore-line"/>
+    <text x="675" y="447" class="label" text-anchor="middle">D3 incidents</text>
+  </g>
+  
+  <!-- messages -->
+  <g>
+    <line x1="760" y1="425" x2="760" y2="460" class="datastore-line"/>
+    <line x1="760" y1="460" x2="870" y2="460" class="datastore-line"/>
+    <line x1="870" y1="425" x2="870" y2="460" class="datastore-line"/>
+    <text x="815" y="447" class="label" text-anchor="middle">D11 messages</text>
+  </g>
+  
+  <!-- Arrows -->
+  <!-- Responder to Login -->
+  <path d="M130 255 L145 255" class="arrow"/>
+  
+  <!-- Login to users datastore -->
+  <path d="M200 277 L205 335" class="arrow"/>
+  <path d="M225 355 L200 282" class="arrow"/>
+  
+  <!-- Login to processes -->
+  <path d="M250 245 L320 105" class="arrow"/>
+  <path d="M250 250 L320 182" class="arrow"/>
+  <path d="M250 258 L320 268" class="arrow"/>
+  <path d="M250 265 L320 355" class="arrow"/>
+  <path d="M250 270 L320 445" class="arrow"/>
+  
+  <!-- Processes to Data Stores -->
+  <path d="M475 85 L615 85" class="arrow"/>
+  <path d="M615 90 L480 90" class="arrow"/>
+  <path d="M475 95 L775 87" class="arrow"/>
+  <path d="M475 175 L615 90" class="arrow"/>
+  <path d="M475 270 L615 267" class="arrow"/>
+  <path d="M475 360 L615 357" class="arrow"/>
+  <path d="M475 445 L615 447" class="arrow"/>
+  <path d="M615 452 L480 455" class="arrow"/>
+  <path d="M475 455 L755 450" class="arrow"/>
+  <path d="M755 455 L480 460" class="arrow"/>
+</svg>
