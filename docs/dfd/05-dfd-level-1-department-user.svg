@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" width="1000" height="600">
+  <defs>
+    <style>
+      .entity { fill: none; stroke: #333; stroke-width: 2; }
+      .process { fill: #e8f4fc; stroke: #333; stroke-width: 2; }
+      .datastore-line { stroke: #333; stroke-width: 2; }
+      .arrow { fill: none; stroke: #333; stroke-width: 1.5; marker-end: url(#arrowhead); }
+      .label { font-family: Arial, sans-serif; font-size: 12px; fill: #333; }
+      .title { font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; fill: #333; }
+      .flow-label { font-family: Arial, sans-serif; font-size: 9px; fill: #666; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#333"/>
+    </marker>
+  </defs>
+  
+  <!-- Title -->
+  <text x="500" y="35" class="title" text-anchor="middle">DFD Level 1 - Department User (Task Allocator) Module</text>
+  
+  <!-- External Entity - Department User -->
+  <rect x="30" y="255" width="100" height="50" class="entity"/>
+  <text x="80" y="275" class="label" text-anchor="middle">DEPARTMENT</text>
+  <text x="80" y="290" class="label" text-anchor="middle">USER</text>
+  
+  <!-- Login Process -->
+  <ellipse cx="200" cy="280" rx="50" ry="22" class="process"/>
+  <text x="200" y="277" class="label" text-anchor="middle">4.0</text>
+  <text x="200" y="290" class="label" text-anchor="middle">Login</text>
+  
+  <!-- Users Data Store -->
+  <g>
+    <line x1="160" y1="365" x2="160" y2="400" class="datastore-line"/>
+    <line x1="160" y1="400" x2="270" y2="400" class="datastore-line"/>
+    <line x1="270" y1="365" x2="270" y2="400" class="datastore-line"/>
+    <text x="215" y="387" class="label" text-anchor="middle">D2 users</text>
+  </g>
+  
+  <!-- Main Processes -->
+  <!-- View All Incidents -->
+  <ellipse cx="420" cy="80" rx="80" ry="28" class="process"/>
+  <text x="420" y="75" class="label" text-anchor="middle">4.1 View All</text>
+  <text x="420" y="90" class="label" text-anchor="middle">Incidents</text>
+  
+  <!-- Assign Incidents -->
+  <ellipse cx="420" cy="165" rx="80" ry="28" class="process"/>
+  <text x="420" y="160" class="label" text-anchor="middle">4.2 Assign</text>
+  <text x="420" y="175" class="label" text-anchor="middle">Incidents</text>
+  
+  <!-- View Real-time Map -->
+  <ellipse cx="420" cy="250" rx="80" ry="28" class="process"/>
+  <text x="420" y="245" class="label" text-anchor="middle">4.3 View</text>
+  <text x="420" y="260" class="label" text-anchor="middle">Real-time Map</text>
+  
+  <!-- Manage Resources -->
+  <ellipse cx="420" cy="335" rx="80" ry="28" class="process"/>
+  <text x="420" y="330" class="label" text-anchor="middle">4.4 Manage</text>
+  <text x="420" y="345" class="label" text-anchor="middle">Resources</text>
+  
+  <!-- Create Safety Alerts -->
+  <ellipse cx="420" cy="420" rx="80" ry="28" class="process"/>
+  <text x="420" y="415" class="label" text-anchor="middle">4.5 Create</text>
+  <text x="420" y="430" class="label" text-anchor="middle">Safety Alerts</text>
+  
+  <!-- View Analytics -->
+  <ellipse cx="420" cy="505" rx="80" ry="28" class="process"/>
+  <text x="420" y="500" class="label" text-anchor="middle">4.6 View Dept</text>
+  <text x="420" y="515" class="label" text-anchor="middle">Analytics</text>
+  
+  <!-- Escalate Incidents -->
+  <ellipse cx="420" cy="575" rx="80" ry="28" class="process"/>
+  <text x="420" y="570" class="label" text-anchor="middle">4.7 Escalate</text>
+  <text x="420" y="585" class="label" text-anchor="middle">Incidents</text>
+  
+  <!-- Data Stores -->
+  <!-- incidents -->
+  <g>
+    <line x1="650" y1="55" x2="650" y2="90" class="datastore-line"/>
+    <line x1="650" y1="90" x2="760" y2="90" class="datastore-line"/>
+    <line x1="760" y1="55" x2="760" y2="90" class="datastore-line"/>
+    <text x="705" y="77" class="label" text-anchor="middle">D3 incidents</text>
+  </g>
+  
+  <!-- assignments -->
+  <g>
+    <line x1="650" y1="140" x2="650" y2="175" class="datastore-line"/>
+    <line x1="650" y1="175" x2="770" y2="175" class="datastore-line"/>
+    <line x1="770" y1="140" x2="770" y2="175" class="datastore-line"/>
+    <text x="710" y="162" class="label" text-anchor="middle">D12 assignments</text>
+  </g>
+  
+  <!-- departments -->
+  <g>
+    <line x1="800" y1="140" x2="800" y2="175" class="datastore-line"/>
+    <line x1="800" y1="175" x2="920" y2="175" class="datastore-line"/>
+    <line x1="920" y1="140" x2="920" y2="175" class="datastore-line"/>
+    <text x="860" y="162" class="label" text-anchor="middle">D4 departments</text>
+  </g>
+  
+  <!-- location_data -->
+  <g>
+    <line x1="650" y1="225" x2="650" y2="260" class="datastore-line"/>
+    <line x1="650" y1="260" x2="770" y2="260" class="datastore-line"/>
+    <line x1="770" y1="225" x2="770" y2="260" class="datastore-line"/>
+    <text x="710" y="247" class="label" text-anchor="middle">D14 location_data</text>
+  </g>
+  
+  <!-- resources -->
+  <g>
+    <line x1="650" y1="310" x2="650" y2="345" class="datastore-line"/>
+    <line x1="650" y1="345" x2="760" y2="345" class="datastore-line"/>
+    <line x1="760" y1="310" x2="760" y2="345" class="datastore-line"/>
+    <text x="705" y="332" class="label" text-anchor="middle">D5 resources</text>
+  </g>
+  
+  <!-- safety_alerts -->
+  <g>
+    <line x1="650" y1="395" x2="650" y2="430" class="datastore-line"/>
+    <line x1="650" y1="430" x2="770" y2="430" class="datastore-line"/>
+    <line x1="770" y1="395" x2="770" y2="430" class="datastore-line"/>
+    <text x="710" y="417" class="label" text-anchor="middle">D10 safety_alerts</text>
+  </g>
+  
+  <!-- analytics_data -->
+  <g>
+    <line x1="650" y1="480" x2="650" y2="515" class="datastore-line"/>
+    <line x1="650" y1="515" x2="760" y2="515" class="datastore-line"/>
+    <line x1="760" y1="480" x2="760" y2="515" class="datastore-line"/>
+    <text x="705" y="502" class="label" text-anchor="middle">D6 analytics</text>
+  </g>
+  
+  <!-- escalation_logs -->
+  <g>
+    <line x1="650" y1="550" x2="650" y2="585" class="datastore-line"/>
+    <line x1="650" y1="585" x2="780" y2="585" class="datastore-line"/>
+    <line x1="780" y1="550" x2="780" y2="585" class="datastore-line"/>
+    <text x="715" y="572" class="label" text-anchor="middle">D15 escalation_logs</text>
+  </g>
+  
+  <!-- Arrows -->
+  <!-- Dept User to Login -->
+  <path d="M130 280 L145 280" class="arrow"/>
+  
+  <!-- Login to users datastore -->
+  <path d="M200 302 L205 360" class="arrow"/>
+  <path d="M225 380 L200 307" class="arrow"/>
+  
+  <!-- Login to processes -->
+  <path d="M250 268 L335 95" class="arrow"/>
+  <path d="M250 272 L335 168" class="arrow"/>
+  <path d="M250 278 L335 250" class="arrow"/>
+  <path d="M250 285 L335 332" class="arrow"/>
+  <path d="M250 290 L335 415" class="arrow"/>
+  <path d="M250 295 L335 500" class="arrow"/>
+  <path d="M250 300 L335 570" class="arrow"/>
+  
+  <!-- Processes to Data Stores -->
+  <path d="M500 77 L645 77" class="arrow"/>
+  <path d="M645 82 L505 82" class="arrow"/>
+  <path d="M500 162 L645 162" class="arrow"/>
+  <path d="M500 168 L795 162" class="arrow"/>
+  <path d="M500 247 L645 247" class="arrow"/>
+  <path d="M645 252 L505 252" class="arrow"/>
+  <path d="M500 332 L645 332" class="arrow"/>
+  <path d="M645 337 L505 337" class="arrow"/>
+  <path d="M500 417 L645 417" class="arrow"/>
+  <path d="M500 502 L645 502" class="arrow"/>
+  <path d="M645 507 L505 507" class="arrow"/>
+  <path d="M500 572 L645 572" class="arrow"/>
+  <path d="M500 578 L645 82" class="arrow"/>
+</svg>

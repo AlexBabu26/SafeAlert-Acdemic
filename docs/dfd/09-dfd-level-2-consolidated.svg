@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 950" width="1400" height="950">
+  <defs>
+    <style>
+      .entity { fill: none; stroke: #333; stroke-width: 2; }
+      .process { fill: #e8f4fc; stroke: #333; stroke-width: 2; }
+      .subprocess { fill: #f5f5f5; stroke: #333; stroke-width: 1.5; }
+      .datastore-line { stroke: #333; stroke-width: 2; }
+      .arrow { fill: none; stroke: #333; stroke-width: 1.5; marker-end: url(#arrowhead); }
+      .label { font-family: Arial, sans-serif; font-size: 11px; fill: #333; }
+      .title { font-family: Arial, sans-serif; font-size: 22px; font-weight: bold; fill: #333; }
+      .subtitle { font-family: Arial, sans-serif; font-size: 14px; fill: #555; }
+      .section { font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; fill: #666; }
+      .ds-label { font-family: Arial, sans-serif; font-size: 10px; fill: #333; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#333"/>
+    </marker>
+  </defs>
+  
+  <!-- Title -->
+  <text x="700" y="35" class="title" text-anchor="middle">DFD Level 2 - Consolidated System Overview</text>
+  <text x="700" y="58" class="subtitle" text-anchor="middle">SafeAlert Emergency Reporting and Response Platform</text>
+  
+  <!-- ==================== LEFT SIDE - ADMIN & DEPT USER ==================== -->
+  
+  <!-- Admin Entity -->
+  <rect x="20" y="150" width="80" height="40" class="entity"/>
+  <text x="60" y="175" class="label" text-anchor="middle">ADMIN</text>
+  
+  <!-- Admin Login -->
+  <ellipse cx="150" cy="170" rx="40" ry="18" class="process"/>
+  <text x="150" y="174" class="label" text-anchor="middle">Login</text>
+  
+  <!-- Department User Entity -->
+  <rect x="20" y="580" width="80" height="40" class="entity"/>
+  <text x="60" y="595" class="label" text-anchor="middle">DEPT</text>
+  <text x="60" y="610" class="label" text-anchor="middle">USER</text>
+  
+  <!-- Dept User Login -->
+  <ellipse cx="150" cy="600" rx="40" ry="18" class="process"/>
+  <text x="150" y="604" class="label" text-anchor="middle">Login</text>
+  
+  <!-- Admin Processes -->
+  <text x="320" y="90" class="section" text-anchor="middle">ADMIN MODULE</text>
+  
+  <ellipse cx="280" cy="120" rx="55" ry="20" class="process"/>
+  <text x="280" y="117" class="label" text-anchor="middle">1.1 User</text>
+  <text x="280" y="130" class="label" text-anchor="middle">Management</text>
+  
+  <ellipse cx="280" cy="180" rx="55" ry="20" class="process"/>
+  <text x="280" y="177" class="label" text-anchor="middle">1.2 Incident</text>
+  <text x="280" y="190" class="label" text-anchor="middle">Oversight</text>
+  
+  <ellipse cx="280" cy="240" rx="55" ry="20" class="process"/>
+  <text x="280" y="237" class="label" text-anchor="middle">1.3 Dept</text>
+  <text x="280" y="250" class="label" text-anchor="middle">Management</text>
+  
+  <ellipse cx="280" cy="300" rx="55" ry="20" class="process"/>
+  <text x="280" y="297" class="label" text-anchor="middle">1.4 System</text>
+  <text x="280" y="310" class="label" text-anchor="middle">Analytics</text>
+  
+  <ellipse cx="280" cy="360" rx="55" ry="20" class="process"/>
+  <text x="280" y="357" class="label" text-anchor="middle">1.5 Category</text>
+  <text x="280" y="370" class="label" text-anchor="middle">Management</text>
+  
+  <!-- Dept User Processes -->
+  <text x="320" y="480" class="section" text-anchor="middle">DEPARTMENT USER MODULE</text>
+  
+  <ellipse cx="280" cy="510" rx="55" ry="20" class="process"/>
+  <text x="280" y="507" class="label" text-anchor="middle">4.1 View</text>
+  <text x="280" y="520" class="label" text-anchor="middle">Incidents</text>
+  
+  <ellipse cx="280" cy="570" rx="55" ry="20" class="process"/>
+  <text x="280" y="567" class="label" text-anchor="middle">4.2 Assign</text>
+  <text x="280" y="580" class="label" text-anchor="middle">Incidents</text>
+  
+  <ellipse cx="280" cy="630" rx="55" ry="20" class="process"/>
+  <text x="280" y="627" class="label" text-anchor="middle">4.3 Map</text>
+  <text x="280" y="640" class="label" text-anchor="middle">View</text>
+  
+  <ellipse cx="280" cy="690" rx="55" ry="20" class="process"/>
+  <text x="280" y="687" class="label" text-anchor="middle">4.4 Resources</text>
+  <text x="280" y="700" class="label" text-anchor="middle">&amp; Alerts</text>
+  
+  <ellipse cx="280" cy="750" rx="55" ry="20" class="process"/>
+  <text x="280" y="747" class="label" text-anchor="middle">4.5 Analytics</text>
+  <text x="280" y="760" class="label" text-anchor="middle">&amp; Escalation</text>
+  
+  <!-- ==================== CENTER - DATA STORES ==================== -->
+  <text x="700" y="90" class="section" text-anchor="middle">CENTRAL DATA STORES</text>
+  
+  <!-- Row 1 -->
+  <g>
+    <line x1="480" y1="110" x2="480" y2="140" class="datastore-line"/>
+    <line x1="480" y1="140" x2="570" y2="140" class="datastore-line"/>
+    <line x1="570" y1="110" x2="570" y2="140" class="datastore-line"/>
+    <text x="525" y="130" class="ds-label" text-anchor="middle">D1 admins</text>
+  </g>
+  
+  <g>
+    <line x1="590" y1="110" x2="590" y2="140" class="datastore-line"/>
+    <line x1="590" y1="140" x2="680" y2="140" class="datastore-line"/>
+    <line x1="680" y1="110" x2="680" y2="140" class="datastore-line"/>
+    <text x="635" y="130" class="ds-label" text-anchor="middle">D2 users</text>
+  </g>
+  
+  <g>
+    <line x1="700" y1="110" x2="700" y2="140" class="datastore-line"/>
+    <line x1="700" y1="140" x2="800" y2="140" class="datastore-line"/>
+    <line x1="800" y1="110" x2="800" y2="140" class="datastore-line"/>
+    <text x="750" y="130" class="ds-label" text-anchor="middle">D3 incidents</text>
+  </g>
+  
+  <g>
+    <line x1="820" y1="110" x2="820" y2="140" class="datastore-line"/>
+    <line x1="820" y1="140" x2="920" y2="140" class="datastore-line"/>
+    <line x1="920" y1="110" x2="920" y2="140" class="datastore-line"/>
+    <text x="870" y="130" class="ds-label" text-anchor="middle">D4 departments</text>
+  </g>
+  
+  <!-- Row 2 -->
+  <g>
+    <line x1="480" y1="420" x2="480" y2="450" class="datastore-line"/>
+    <line x1="480" y1="450" x2="570" y2="450" class="datastore-line"/>
+    <line x1="570" y1="420" x2="570" y2="450" class="datastore-line"/>
+    <text x="525" y="440" class="ds-label" text-anchor="middle">D5 resources</text>
+  </g>
+  
+  <g>
+    <line x1="590" y1="420" x2="590" y2="450" class="datastore-line"/>
+    <line x1="590" y1="450" x2="680" y2="450" class="datastore-line"/>
+    <line x1="680" y1="420" x2="680" y2="450" class="datastore-line"/>
+    <text x="635" y="440" class="ds-label" text-anchor="middle">D6 analytics</text>
+  </g>
+  
+  <g>
+    <line x1="700" y1="420" x2="700" y2="450" class="datastore-line"/>
+    <line x1="700" y1="450" x2="800" y2="450" class="datastore-line"/>
+    <line x1="800" y1="420" x2="800" y2="450" class="datastore-line"/>
+    <text x="750" y="440" class="ds-label" text-anchor="middle">D7 categories</text>
+  </g>
+  
+  <g>
+    <line x1="820" y1="420" x2="820" y2="450" class="datastore-line"/>
+    <line x1="820" y1="450" x2="930" y2="450" class="datastore-line"/>
+    <line x1="930" y1="420" x2="930" y2="450" class="datastore-line"/>
+    <text x="875" y="440" class="ds-label" text-anchor="middle">D8 status_history</text>
+  </g>
+  
+  <!-- Row 3 -->
+  <g>
+    <line x1="480" y1="520" x2="480" y2="550" class="datastore-line"/>
+    <line x1="480" y1="550" x2="580" y2="550" class="datastore-line"/>
+    <line x1="580" y1="520" x2="580" y2="550" class="datastore-line"/>
+    <text x="530" y="540" class="ds-label" text-anchor="middle">D9 attachments</text>
+  </g>
+  
+  <g>
+    <line x1="600" y1="520" x2="600" y2="550" class="datastore-line"/>
+    <line x1="600" y1="550" x2="700" y2="550" class="datastore-line"/>
+    <line x1="700" y1="520" x2="700" y2="550" class="datastore-line"/>
+    <text x="650" y="540" class="ds-label" text-anchor="middle">D10 safety_alerts</text>
+  </g>
+  
+  <g>
+    <line x1="720" y1="520" x2="720" y2="550" class="datastore-line"/>
+    <line x1="720" y1="550" x2="810" y2="550" class="datastore-line"/>
+    <line x1="810" y1="520" x2="810" y2="550" class="datastore-line"/>
+    <text x="765" y="540" class="ds-label" text-anchor="middle">D11 messages</text>
+  </g>
+  
+  <g>
+    <line x1="830" y1="520" x2="830" y2="550" class="datastore-line"/>
+    <line x1="830" y1="550" x2="940" y2="550" class="datastore-line"/>
+    <line x1="940" y1="520" x2="940" y2="550" class="datastore-line"/>
+    <text x="885" y="540" class="ds-label" text-anchor="middle">D12 assignments</text>
+  </g>
+  
+  <!-- Row 4 -->
+  <g>
+    <line x1="530" y1="620" x2="530" y2="650" class="datastore-line"/>
+    <line x1="530" y1="650" x2="640" y2="650" class="datastore-line"/>
+    <line x1="640" y1="620" x2="640" y2="650" class="datastore-line"/>
+    <text x="585" y="640" class="ds-label" text-anchor="middle">D13 notifications</text>
+  </g>
+  
+  <g>
+    <line x1="660" y1="620" x2="660" y2="650" class="datastore-line"/>
+    <line x1="660" y1="650" x2="770" y2="650" class="datastore-line"/>
+    <line x1="770" y1="620" x2="770" y2="650" class="datastore-line"/>
+    <text x="715" y="640" class="ds-label" text-anchor="middle">D14 location_data</text>
+  </g>
+  
+  <g>
+    <line x1="790" y1="620" x2="790" y2="650" class="datastore-line"/>
+    <line x1="790" y1="650" x2="910" y2="650" class="datastore-line"/>
+    <line x1="910" y1="620" x2="910" y2="650" class="datastore-line"/>
+    <text x="850" y="640" class="ds-label" text-anchor="middle">D15 escalation_logs</text>
+  </g>
+  
+  <!-- ==================== RIGHT SIDE - CITIZEN & RESPONDER ==================== -->
+  
+  <!-- Citizen Entity -->
+  <rect x="1300" y="150" width="80" height="40" class="entity"/>
+  <text x="1340" y="175" class="label" text-anchor="middle">CITIZEN</text>
+  
+  <!-- Citizen Login -->
+  <ellipse cx="1230" cy="170" rx="40" ry="18" class="process"/>
+  <text x="1230" y="174" class="label" text-anchor="middle">Login</text>
+  
+  <!-- Responder Entity -->
+  <rect x="1300" y="580" width="80" height="40" class="entity"/>
+  <text x="1340" y="605" class="label" text-anchor="middle">RESPONDER</text>
+  
+  <!-- Responder Login -->
+  <ellipse cx="1230" cy="600" rx="40" ry="18" class="process"/>
+  <text x="1230" y="604" class="label" text-anchor="middle">Login</text>
+  
+  <!-- Citizen Processes -->
+  <text x="1080" y="90" class="section" text-anchor="middle">CITIZEN MODULE</text>
+  
+  <ellipse cx="1120" cy="120" rx="55" ry="20" class="process"/>
+  <text x="1120" y="117" class="label" text-anchor="middle">2.1 Report</text>
+  <text x="1120" y="130" class="label" text-anchor="middle">Incident</text>
+  
+  <ellipse cx="1120" cy="180" rx="55" ry="20" class="process"/>
+  <text x="1120" y="177" class="label" text-anchor="middle">2.2 Track</text>
+  <text x="1120" y="190" class="label" text-anchor="middle">Status</text>
+  
+  <ellipse cx="1120" cy="240" rx="55" ry="20" class="process"/>
+  <text x="1120" y="237" class="label" text-anchor="middle">2.3 View</text>
+  <text x="1120" y="250" class="label" text-anchor="middle">Profile</text>
+  
+  <ellipse cx="1120" cy="300" rx="55" ry="20" class="process"/>
+  <text x="1120" y="297" class="label" text-anchor="middle">2.4 View</text>
+  <text x="1120" y="310" class="label" text-anchor="middle">Alerts</text>
+  
+  <ellipse cx="1120" cy="360" rx="55" ry="20" class="process"/>
+  <text x="1120" y="357" class="label" text-anchor="middle">2.5 Send</text>
+  <text x="1120" y="370" class="label" text-anchor="middle">Messages</text>
+  
+  <!-- Responder Processes -->
+  <text x="1080" y="480" class="section" text-anchor="middle">RESPONDER MODULE</text>
+  
+  <ellipse cx="1120" cy="510" rx="55" ry="20" class="process"/>
+  <text x="1120" y="507" class="label" text-anchor="middle">3.1 View</text>
+  <text x="1120" y="520" class="label" text-anchor="middle">Assignments</text>
+  
+  <ellipse cx="1120" cy="570" rx="55" ry="20" class="process"/>
+  <text x="1120" y="567" class="label" text-anchor="middle">3.2 Accept</text>
+  <text x="1120" y="580" class="label" text-anchor="middle">Assignment</text>
+  
+  <ellipse cx="1120" cy="630" rx="55" ry="20" class="process"/>
+  <text x="1120" y="627" class="label" text-anchor="middle">3.3 Update</text>
+  <text x="1120" y="640" class="label" text-anchor="middle">Status</text>
+  
+  <ellipse cx="1120" cy="690" rx="55" ry="20" class="process"/>
+  <text x="1120" y="687" class="label" text-anchor="middle">3.4 Share</text>
+  <text x="1120" y="700" class="label" text-anchor="middle">Location</text>
+  
+  <ellipse cx="1120" cy="750" rx="55" ry="20" class="process"/>
+  <text x="1120" y="747" class="label" text-anchor="middle">3.5 View &amp;</text>
+  <text x="1120" y="760" class="label" text-anchor="middle">Communicate</text>
+  
+  <!-- ==================== ARROWS - Admin Side ==================== -->
+  <path d="M100 170 L106 170" class="arrow"/>
+  <path d="M190 165 L220 130" class="arrow"/>
+  <path d="M190 170 L220 175" class="arrow"/>
+  <path d="M190 175 L220 235" class="arrow"/>
+  <path d="M190 180 L220 295" class="arrow"/>
+  <path d="M190 185 L220 355" class="arrow"/>
+  
+  <!-- Admin processes to data stores -->
+  <path d="M335 120 L585 130" class="arrow"/>
+  <path d="M335 180 L695 135" class="arrow"/>
+  <path d="M335 240 L815 135" class="arrow"/>
+  <path d="M335 300 L585 440" class="arrow"/>
+  <path d="M335 360 L695 445" class="arrow"/>
+  
+  <!-- Dept User arrows -->
+  <path d="M100 600 L106 600" class="arrow"/>
+  <path d="M190 595 L220 520" class="arrow"/>
+  <path d="M190 600 L220 570" class="arrow"/>
+  <path d="M190 605 L220 630" class="arrow"/>
+  <path d="M190 610 L220 690" class="arrow"/>
+  <path d="M190 615 L220 750" class="arrow"/>
+  
+  <!-- Dept processes to data stores -->
+  <path d="M335 510 L695 140" class="arrow"/>
+  <path d="M335 570 L825 545" class="arrow"/>
+  <path d="M335 630 L655 640" class="arrow"/>
+  <path d="M335 690 L475 445" class="arrow"/>
+  <path d="M335 690 L595 545" class="arrow"/>
+  <path d="M335 750 L585 445" class="arrow"/>
+  <path d="M335 750 L785 645" class="arrow"/>
+  
+  <!-- ==================== ARROWS - Citizen Side ==================== -->
+  <path d="M1295 170 L1275 170" class="arrow"/>
+  <path d="M1185 165 L1180 130" class="arrow"/>
+  <path d="M1185 170 L1180 175" class="arrow"/>
+  <path d="M1185 175 L1180 235" class="arrow"/>
+  <path d="M1185 180 L1180 295" class="arrow"/>
+  <path d="M1185 185 L1180 355" class="arrow"/>
+  
+  <!-- Citizen processes to data stores -->
+  <path d="M1060 120 L805 135" class="arrow"/>
+  <path d="M1060 120 L805 445" class="arrow"/>
+  <path d="M1060 180 L935 450" class="arrow"/>
+  <path d="M1060 240 L685 140" class="arrow"/>
+  <path d="M1060 300 L705 545" class="arrow"/>
+  <path d="M1060 360 L815 545" class="arrow"/>
+  
+  <!-- ==================== ARROWS - Responder Side ==================== -->
+  <path d="M1295 600 L1275 600" class="arrow"/>
+  <path d="M1185 595 L1180 520" class="arrow"/>
+  <path d="M1185 600 L1180 570" class="arrow"/>
+  <path d="M1185 605 L1180 630" class="arrow"/>
+  <path d="M1185 610 L1180 690" class="arrow"/>
+  <path d="M1185 615 L1180 750" class="arrow"/>
+  
+  <!-- Responder processes to data stores -->
+  <path d="M1060 510 L945 545" class="arrow"/>
+  <path d="M1060 570 L945 550" class="arrow"/>
+  <path d="M1060 630 L935 455" class="arrow"/>
+  <path d="M1060 690 L775 645" class="arrow"/>
+  <path d="M1060 750 L815 550" class="arrow"/>
+  <path d="M1060 750 L805 140" class="arrow"/>
+  
+  <!-- ==================== LEGEND ==================== -->
+  <rect x="500" y="780" width="400" height="150" fill="#f9f9f9" stroke="#ddd" rx="8"/>
+  <text x="700" y="810" class="section" text-anchor="middle">LEGEND</text>
+  
+  <rect x="530" y="830" width="40" height="25" class="entity"/>
+  <text x="590" y="848" class="label">External Entity (Actor)</text>
+  
+  <ellipse cx="550" cy="880" rx="20" ry="12" class="process"/>
+  <text x="590" y="885" class="label">Process</text>
+  
+  <line x1="530" y1="910" x2="530" y2="930" class="datastore-line"/>
+  <line x1="530" y1="930" x2="570" y2="930" class="datastore-line"/>
+  <line x1="570" y1="910" x2="570" y2="930" class="datastore-line"/>
+  <text x="590" y="925" class="label">Data Store</text>
+  
+  <line x1="750" y1="845" x2="810" y2="845" class="arrow"/>
+  <text x="825" y="850" class="label">Data Flow</text>
+</svg>
