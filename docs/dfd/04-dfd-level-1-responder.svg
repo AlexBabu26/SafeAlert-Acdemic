@@ -59,7 +59,7 @@
   <!-- View Incident Details -->
   <ellipse cx="400" cy="450" rx="75" ry="28" class="process"/>
   <text x="400" y="445" class="label" text-anchor="middle">3.5 View Incident</text>
-  <text x="400" y="460" class="label" text-anchor="middle">& Communicate</text>
+  <text x="400" y="460" class="label" text-anchor="middle">&amp; Communicate</text>
   
   <!-- Data Stores -->
   <!-- assignments -->
