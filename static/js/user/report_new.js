@@ -1,6 +1,15 @@
 document.addEventListener('DOMContentLoaded', function() {
     if (!requireAuth()) return;
 
+    const locationInput = document.getElementById('location_text');
+    const latitudeInput = document.getElementById('latitude');
+    const longitudeInput = document.getElementById('longitude');
+    const locationStatus = document.getElementById('location-status');
+    const coordsDisplay = document.getElementById('coordinates-display');
+    const coordsText = document.getElementById('coords-text');
+    const mapLink = document.getElementById('map-preview-link');
+    let geocodeDebounceTimer = null;
+
     // Load categories
     loadCategories();
     
@@ -28,8 +37,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const title = document.getElementById('title').value;
         const description = document.getElementById('description').value;
         const location_text = document.getElementById('location_text').value;
-        const latitude = document.getElementById('latitude').value;
-        const longitude = document.getElementById('longitude').value;
+        let latitude = latitudeInput.value;
+        let longitude = longitudeInput.value;
         const fileInput = document.getElementById('attachment');
 
         if (!categoryId || !description) {
@@ -39,6 +48,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             showLoader();
+
+            // If user entered/edited a location manually, resolve fresh coordinates before submit.
+            if (location_text && (!latitude || !longitude)) {
+                const resolved = await geocodeLocationText(location_text);
+                if (resolved) {
+                    latitude = resolved.latitude;
+                    longitude = resolved.longitude;
+                    setCoordinates(resolved.latitude, resolved.longitude);
+                }
+            }
 
             // First create the incident with coordinates
             const incidentData = {
@@ -91,6 +110,38 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // If location text is edited manually, clear old coordinates and resolve new ones.
+    if (locationInput) {
+        locationInput.addEventListener('input', () => {
+            if (locationInput.getAttribute('data-auto-filled') === 'true') {
+                locationInput.removeAttribute('data-auto-filled');
+            }
+
+            clearCoordinates();
+
+            const query = locationInput.value.trim();
+            if (!query) {
+                locationStatus.textContent = 'Enter a location to resolve coordinates.';
+                return;
+            }
+
+            locationStatus.innerHTML = '<i class="bi bi-info-circle text-info"></i> Resolving coordinates...';
+            if (geocodeDebounceTimer) {
+                clearTimeout(geocodeDebounceTimer);
+            }
+
+            geocodeDebounceTimer = setTimeout(async () => {
+                const result = await geocodeLocationText(query);
+                if (result) {
+                    setCoordinates(result.latitude, result.longitude);
+                    locationStatus.innerHTML = '<i class="bi bi-check-circle text-success"></i> Coordinates updated from entered location.';
+                } else {
+                    locationStatus.innerHTML = '<i class="bi bi-x-circle text-warning"></i> Could not resolve coordinates. You can still submit text location.';
+                }
+            }, 700);
+        });
+    }
+
     async function loadCategories() {
         try {
             const data = await apiGet(API_ENDPOINTS.categories);
@@ -114,14 +165,6 @@ document.addEventListener('DOMContentLoaded', function() {
      * Uses ipapi.co which handles IP detection and geolocation in one call
      */
     async function fetchLocationFromIP() {
-        const locationInput = document.getElementById('location_text');
-        const latitudeInput = document.getElementById('latitude');
-        const longitudeInput = document.getElementById('longitude');
-        const locationStatus = document.getElementById('location-status');
-        const coordsDisplay = document.getElementById('coordinates-display');
-        const coordsText = document.getElementById('coords-text');
-        const mapLink = document.getElementById('map-preview-link');
-        
         // Don't overwrite if user has already entered a location
         if (locationInput.value.trim()) {
             locationStatus.textContent = 'Location set manually';
@@ -153,13 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Store coordinates
                 if (geoData.latitude && geoData.longitude) {
-                    latitudeInput.value = geoData.latitude;
-                    longitudeInput.value = geoData.longitude;
-                    
-                    // Show coordinates display
-                    coordsText.textContent = `${geoData.latitude.toFixed(6)}, ${geoData.longitude.toFixed(6)}`;
-                    mapLink.href = `https://www.google.com/maps?q=${geoData.latitude},${geoData.longitude}`;
-                    coordsDisplay.style.display = 'block';
+                    setCoordinates(geoData.latitude, geoData.longitude);
                     
                     locationStatus.innerHTML = '<i class="bi bi-check-circle text-success"></i> Location detected from IP. You can edit if incorrect.';
                     console.log('Location auto-filled from IP:', locationString, `(${geoData.latitude}, ${geoData.longitude})`);
@@ -174,6 +211,57 @@ document.addEventListener('DOMContentLoaded', function() {
             // Silently fail - location fetching is optional
             locationStatus.innerHTML = '<i class="bi bi-x-circle text-danger"></i> Could not detect location. Please enter manually.';
             console.warn('Could not auto-fetch location from IP:', error);
+        }
+    }
+
+    function setCoordinates(lat, lng) {
+        latitudeInput.value = lat;
+        longitudeInput.value = lng;
+        coordsText.textContent = `${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}`;
+        mapLink.href = `https://www.google.com/maps?q=${lat},${lng}`;
+        coordsDisplay.style.display = 'block';
+    }
+
+    function clearCoordinates() {
+        latitudeInput.value = '';
+        longitudeInput.value = '';
+        coordsDisplay.style.display = 'none';
+    }
+
+    async function geocodeLocationText(query) {
+        const text = (query || '').trim();
+        if (text.length < 3) {
+            return null;
+        }
+
+        try {
+            const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(text)}`;
+            const response = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            if (!response.ok) {
+                return null;
+            }
+
+            const data = await response.json();
+            if (!Array.isArray(data) || !data.length) {
+                return null;
+            }
+
+            const first = data[0];
+            if (!first.lat || !first.lon) {
+                return null;
+            }
+
+            return {
+                latitude: parseFloat(first.lat),
+                longitude: parseFloat(first.lon),
+            };
+        } catch (error) {
+            console.warn('Could not geocode manual location:', error);
+            return null;
         }
     }
 });

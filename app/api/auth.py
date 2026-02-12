@@ -121,16 +121,28 @@ def register():
     
     user_schema = UserSchema()
     
-    # Return appropriate message based on role
-    role_messages = {
-        'citizen': 'Your account has been created and is pending approval. You will be notified once your account is activated by an administrator.',
-        'responder': f'Your respondent account has been created and is pending approval to join {department.name}. You will be notified once your account is activated.',
-        'department': f'Your department "{new_department.name}" has been registered and is pending approval. Both the department and your account will be activated by an administrator.',
-    }
+    # Build message lazily to avoid evaluating role-specific values too early.
+    if role == 'responder':
+        message = (
+            f'Your respondent account has been created and is pending approval to join '
+            f'{department.name if department else "the selected department"}. '
+            'You will be notified once your account is activated.'
+        )
+    elif role == 'department':
+        message = (
+            f'Your department "{new_department.name if new_department else "department"}" '
+            'has been registered and is pending approval. Both the department and your '
+            'account will be activated by an administrator.'
+        )
+    else:
+        message = (
+            'Your account has been created and is pending approval. You will be notified '
+            'once your account is activated by an administrator.'
+        )
     
     return jsonify({
         'user': user_schema.dump(user),
-        'message': role_messages.get(role, role_messages['citizen']),
+        'message': message,
         'pending_approval': True,
         'department': {
             'id': new_department.id,

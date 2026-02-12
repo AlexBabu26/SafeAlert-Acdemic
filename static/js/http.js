@@ -1,5 +1,43 @@
 // HTTP client with JWT authentication and auto-refresh
 
+function extractApiErrorMessage(errorData, fallbackMessage) {
+    if (!errorData || typeof errorData !== 'object') {
+        return fallbackMessage;
+    }
+
+    if (typeof errorData.detail === 'string' && errorData.detail.trim()) {
+        return errorData.detail;
+    }
+
+    if (typeof errorData.message === 'string' && errorData.message.trim()) {
+        return errorData.message;
+    }
+
+    const messages = [];
+    Object.entries(errorData).forEach(([field, value]) => {
+        if (field === 'detail' || field === 'message') {
+            return;
+        }
+
+        const fieldLabel = `${field}: `;
+
+        if (Array.isArray(value) && value.length) {
+            messages.push(`${fieldLabel}${value.join(', ')}`);
+            return;
+        }
+
+        if (typeof value === 'string' && value.trim()) {
+            messages.push(`${fieldLabel}${value}`);
+        }
+    });
+
+    if (messages.length) {
+        return messages.join(' ');
+    }
+
+    return fallbackMessage;
+}
+
 async function apiRequest(url, options = {}) {
     const token = getAccessToken();
     
@@ -37,8 +75,9 @@ async function apiRequest(url, options = {}) {
     }
 
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'An error occurred' }));
-        throw new Error(errorData.detail || errorData.message || `HTTP ${response.status}`);
+        const fallbackMessage = `HTTP ${response.status}`;
+        const errorData = await response.json().catch(() => null);
+        throw new Error(extractApiErrorMessage(errorData, fallbackMessage));
     }
 
     return response.json();
@@ -102,8 +141,9 @@ async function apiPostFormData(url, formData) {
     }
 
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'An error occurred' }));
-        throw new Error(errorData.detail || errorData.message || `HTTP ${response.status}`);
+        const fallbackMessage = `HTTP ${response.status}`;
+        const errorData = await response.json().catch(() => null);
+        throw new Error(extractApiErrorMessage(errorData, fallbackMessage));
     }
 
     return response.json();

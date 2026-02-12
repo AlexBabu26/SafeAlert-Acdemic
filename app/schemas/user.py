@@ -2,6 +2,8 @@
 User schemas for SafeAlert
 """
 from marshmallow import Schema, fields, validate, ValidationError, validates_schema
+import phonenumbers
+from phonenumbers import NumberParseException, PhoneNumberFormat
 from app.models import User
 
 
@@ -61,6 +63,20 @@ class UserRegistrationSchema(Schema):
                 raise ValidationError({'department_type': ['Department type is required.']})
             if not data.get('latitude') or not data.get('longitude'):
                 raise ValidationError({'latitude': ['Office location is required.']})
+
+        # Validate Indian phone number format (optional field)
+        phone_number = (data.get('phone_number') or '').strip()
+        if phone_number:
+            try:
+                parsed = phonenumbers.parse(phone_number, 'IN')
+            except NumberParseException:
+                raise ValidationError({'phone_number': ['Enter a valid Indian phone number (e.g., +91 9876543210).']})
+
+            if not phonenumbers.is_valid_number(parsed) or not phonenumbers.is_valid_number_for_region(parsed, 'IN'):
+                raise ValidationError({'phone_number': ['Phone number must be a valid Indian number.']})
+
+            # Store in normalized E.164 format (+91XXXXXXXXXX)
+            data['phone_number'] = phonenumbers.format_number(parsed, PhoneNumberFormat.E164)
 
 
 class UserSchema(Schema):
