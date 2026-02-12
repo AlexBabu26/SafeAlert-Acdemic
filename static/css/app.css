@@ -138,6 +138,19 @@ main {
     box-shadow: var(--sa-ring);
 }
 
+/* Password visibility toggle button */
+.password-toggle-btn {
+    border-color: var(--sa-border);
+    color: var(--sa-muted);
+}
+
+.password-toggle-btn:hover,
+.password-toggle-btn:focus {
+    color: var(--sa-primary);
+    border-color: rgba(37, 99, 235, 0.45);
+    background-color: color-mix(in srgb, var(--sa-primary) 8%, transparent);
+}
+
 .btn {
     border-radius: 999px;
     font-weight: 600;

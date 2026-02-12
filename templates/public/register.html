@@ -414,12 +414,22 @@
                         
                         <div class="mb-3">
                             <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control" id="password" required>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="password" required>
+                                <button class="btn btn-outline-secondary password-toggle-btn" type="button" id="toggle-register-password" aria-label="Show password">
+                                    <i class="bi bi-eye-slash"></i>
+                                </button>
+                            </div>
                             <div class="form-text">Must be at least 8 characters</div>
                         </div>
                         <div class="mb-3">
                             <label for="password2" class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control" id="password2" required>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="password2" required>
+                                <button class="btn btn-outline-secondary password-toggle-btn" type="button" id="toggle-register-password2" aria-label="Show confirm password">
+                                    <i class="bi bi-eye-slash"></i>
+                                </button>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-primary w-100 py-2" id="submit-btn">
                             <span id="btn-text">Create Account</span>
@@ -447,7 +457,23 @@ document.addEventListener('DOMContentLoaded', function() {
     loadDepartments();
     loadDepartmentTypes();
     loadAreas();
+    setupPasswordToggle('password', 'toggle-register-password');
+    setupPasswordToggle('password2', 'toggle-register-password2');
 });
+
+function setupPasswordToggle(inputId, buttonId) {
+    const input = document.getElementById(inputId);
+    const button = document.getElementById(buttonId);
+    if (!input || !button) return;
+
+    button.addEventListener('click', function() {
+        const icon = button.querySelector('i');
+        const isHidden = input.type === 'password';
+        input.type = isHidden ? 'text' : 'password';
+        icon.className = isHidden ? 'bi bi-eye' : 'bi bi-eye-slash';
+        button.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+    });
+}
 
 function selectRole(role) {
     selectedRole = role;

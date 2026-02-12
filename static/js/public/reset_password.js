@@ -9,6 +9,9 @@ const urlParams = new URLSearchParams(window.location.search);
 const token = urlParams.get('token');
 
 document.addEventListener('DOMContentLoaded', async () => {
+    setupPasswordToggle('new_password', 'toggle-new-password');
+    setupPasswordToggle('confirm_password', 'toggle-confirm-password');
+
     if (!token) {
         showError('Invalid reset link. Please request a new password reset.');
         document.getElementById('reset-password-form').style.display = 'none';
@@ -134,5 +137,19 @@ function showSuccess(message) {
     
     // Hide the form
     form.style.display = 'none';
+}
+
+function setupPasswordToggle(inputId, buttonId) {
+    const input = document.getElementById(inputId);
+    const button = document.getElementById(buttonId);
+    if (!input || !button) return;
+
+    button.addEventListener('click', function() {
+        const icon = button.querySelector('i');
+        const isHidden = input.type === 'password';
+        input.type = isHidden ? 'text' : 'password';
+        icon.className = isHidden ? 'bi bi-eye' : 'bi bi-eye-slash';
+        button.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+    });
 }
 

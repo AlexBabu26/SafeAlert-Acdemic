@@ -23,7 +23,12 @@
                         </div>
                         <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" required>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="password" required>
+                                <button class="btn btn-outline-secondary password-toggle-btn" type="button" id="toggle-login-password" aria-label="Show password">
+                                    <i class="bi bi-eye-slash"></i>
+                                </button>
+                            </div>
                             <div class="text-end mt-1">
                                 <small><a href="/forgot-password" class="text-decoration-none">Forgot password?</a></small>
                             </div>
@@ -43,5 +48,20 @@
 
 {% block extra_js %}
 <script src="/static/js/public/login.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordInput = document.getElementById('password');
+    const toggleBtn = document.getElementById('toggle-login-password');
+    if (!passwordInput || !toggleBtn) return;
+
+    toggleBtn.addEventListener('click', function() {
+        const icon = toggleBtn.querySelector('i');
+        const isHidden = passwordInput.type === 'password';
+        passwordInput.type = isHidden ? 'text' : 'password';
+        icon.className = isHidden ? 'bi bi-eye' : 'bi bi-eye-slash';
+        toggleBtn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+    });
+});
+</script>
 {% endblock %}
 
