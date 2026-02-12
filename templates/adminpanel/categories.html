@@ -1,0 +1,325 @@
+{% extends 'base.html' %}
+
+{% block title %}Category Management - SafeAlert Admin{% endblock %}
+
+{% block content %}
+<div class="sa-page-header">
+    <div>
+        <h1 class="sa-page-title"><i class="bi bi-tags me-2"></i>Category Management</h1>
+        <p class="sa-page-subtitle">Create and manage incident categories used by reports.</p>
+    </div>
+    <div class="sa-page-actions">
+        <button class="btn btn-primary" id="btn-add-category">
+            <i class="bi bi-plus-lg"></i> Add Category
+        </button>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-body p-4">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Search</label>
+                <input type="text" class="form-control" id="category-search" placeholder="Name or description">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Severity</label>
+                <select class="form-select" id="severity-filter">
+                    <option value="">All Severities</option>
+                    <option value="CRITICAL">CRITICAL</option>
+                    <option value="HIGH">HIGH</option>
+                    <option value="MEDIUM">MEDIUM</option>
+                    <option value="LOW">LOW</option>
+                    <option value="INFO">INFO</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="status-filter">
+                    <option value="">All</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-outline-secondary w-100" id="btn-reset-filters">Reset</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Category</th>
+                        <th>Default Severity</th>
+                        <th>Priority</th>
+                        <th>Mappings</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="categories-tbody">
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="category-modal-title">Add Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="category-form">
+                    <input type="hidden" id="category-id">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="category-name" required maxlength="100">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Icon (emoji or text)</label>
+                            <input type="text" class="form-control" id="category-icon" maxlength="50" placeholder="🔥">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="category-description" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Default Severity</label>
+                            <select class="form-select" id="category-default-severity">
+                                <option value="CRITICAL">CRITICAL</option>
+                                <option value="HIGH">HIGH</option>
+                                <option value="MEDIUM">MEDIUM</option>
+                                <option value="LOW">LOW</option>
+                                <option value="INFO">INFO</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Color</label>
+                            <input type="text" class="form-control" id="category-color" placeholder="#FF5722" maxlength="20">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Priority Order</label>
+                            <input type="number" class="form-control" id="category-priority-order" value="0" min="0">
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="category-is-active" checked>
+                                <label class="form-check-label" for="category-is-active">
+                                    Active category
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-save-category">Save Category</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CATEGORIES_API = '/api/admin/categories/';
+let categories = [];
+let categoryModal = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+    if (!userInfo.is_staff) {
+        window.location.href = '/login';
+        return;
+    }
+
+    categoryModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+    loadCategories();
+
+    document.getElementById('btn-add-category').addEventListener('click', openCreateModal);
+    document.getElementById('btn-save-category').addEventListener('click', saveCategory);
+    document.getElementById('btn-reset-filters').addEventListener('click', resetFilters);
+    document.getElementById('category-search').addEventListener('input', renderCategories);
+    document.getElementById('severity-filter').addEventListener('change', renderCategories);
+    document.getElementById('status-filter').addEventListener('change', renderCategories);
+});
+
+async function loadCategories() {
+    try {
+        const data = await apiRequest(`${CATEGORIES_API}?include_inactive=true`);
+        categories = data.results || [];
+        renderCategories();
+    } catch (error) {
+        document.getElementById('categories-tbody').innerHTML = `
+            <tr><td colspan="6" class="text-center text-danger py-4">Failed to load categories</td></tr>
+        `;
+        showToast(error.message || 'Failed to load categories', 'error');
+    }
+}
+
+function renderCategories() {
+    const tbody = document.getElementById('categories-tbody');
+    const search = (document.getElementById('category-search').value || '').toLowerCase().trim();
+    const severity = document.getElementById('severity-filter').value;
+    const status = document.getElementById('status-filter').value;
+
+    let filtered = categories.filter(c => {
+        const matchesSearch = !search ||
+            (c.name || '').toLowerCase().includes(search) ||
+            (c.description || '').toLowerCase().includes(search);
+        const matchesSeverity = !severity || c.default_severity === severity;
+        const matchesStatus = !status ||
+            (status === 'active' && c.is_active) ||
+            (status === 'inactive' && !c.is_active);
+        return matchesSearch && matchesSeverity && matchesStatus;
+    });
+
+    if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">No categories found</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(c => `
+        <tr>
+            <td class="ps-4">
+                <div class="fw-semibold">${escapeHtml(c.icon || '')} ${escapeHtml(c.name || '')}</div>
+                <div class="small text-muted">${escapeHtml(c.description || '')}</div>
+            </td>
+            <td><span class="badge bg-secondary">${escapeHtml(c.default_severity || 'MEDIUM')}</span></td>
+            <td>${c.priority_order ?? 0}</td>
+            <td>${c.mapping_count ?? 0}</td>
+            <td>
+                <span class="badge ${c.is_active ? 'bg-success' : 'bg-secondary'}">
+                    ${c.is_active ? 'Active' : 'Inactive'}
+                </span>
+            </td>
+            <td class="text-end pe-4">
+                <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal(${c.id})">Edit</button>
+                <button class="btn btn-sm ${c.is_active ? 'btn-outline-warning' : 'btn-outline-success'} me-1" onclick="toggleCategory(${c.id}, ${!c.is_active})">
+                    ${c.is_active ? 'Deactivate' : 'Activate'}
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory(${c.id})">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function resetFilters() {
+    document.getElementById('category-search').value = '';
+    document.getElementById('severity-filter').value = '';
+    document.getElementById('status-filter').value = '';
+    renderCategories();
+}
+
+function openCreateModal() {
+    document.getElementById('category-modal-title').textContent = 'Add Category';
+    document.getElementById('category-id').value = '';
+    document.getElementById('category-name').value = '';
+    document.getElementById('category-description').value = '';
+    document.getElementById('category-icon').value = '';
+    document.getElementById('category-default-severity').value = 'MEDIUM';
+    document.getElementById('category-color').value = '';
+    document.getElementById('category-priority-order').value = '0';
+    document.getElementById('category-is-active').checked = true;
+    categoryModal.show();
+}
+
+async function openEditModal(categoryId) {
+    try {
+        const category = await apiRequest(`${CATEGORIES_API}${categoryId}/`);
+        document.getElementById('category-modal-title').textContent = 'Edit Category';
+        document.getElementById('category-id').value = category.id;
+        document.getElementById('category-name').value = category.name || '';
+        document.getElementById('category-description').value = category.description || '';
+        document.getElementById('category-icon').value = category.icon || '';
+        document.getElementById('category-default-severity').value = category.default_severity || 'MEDIUM';
+        document.getElementById('category-color').value = category.color || '';
+        document.getElementById('category-priority-order').value = category.priority_order ?? 0;
+        document.getElementById('category-is-active').checked = !!category.is_active;
+        categoryModal.show();
+    } catch (error) {
+        showToast(error.message || 'Failed to load category', 'error');
+    }
+}
+
+async function saveCategory() {
+    const id = document.getElementById('category-id').value;
+    const payload = {
+        name: document.getElementById('category-name').value.trim(),
+        description: document.getElementById('category-description').value.trim(),
+        icon: document.getElementById('category-icon').value.trim(),
+        default_severity: document.getElementById('category-default-severity').value,
+        color: document.getElementById('category-color').value.trim(),
+        priority_order: parseInt(document.getElementById('category-priority-order').value || '0', 10),
+        is_active: document.getElementById('category-is-active').checked
+    };
+
+    if (!payload.name) {
+        showToast('Category name is required', 'error');
+        return;
+    }
+
+    try {
+        showLoader();
+        if (id) {
+            await apiRequest(`${CATEGORIES_API}${id}/`, {
+                method: 'PATCH',
+                body: JSON.stringify(payload)
+            });
+            showToast('Category updated', 'success');
+        } else {
+            await apiRequest(CATEGORIES_API, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            showToast('Category created', 'success');
+        }
+        categoryModal.hide();
+        await loadCategories();
+    } catch (error) {
+        showToast(error.message || 'Failed to save category', 'error');
+    } finally {
+        hideLoader();
+    }
+}
+
+async function toggleCategory(categoryId, isActive) {
+    try {
+        await apiRequest(`${CATEGORIES_API}${categoryId}/`, {
+            method: 'PATCH',
+            body: JSON.stringify({ is_active: isActive })
+        });
+        showToast(isActive ? 'Category activated' : 'Category deactivated', 'success');
+        await loadCategories();
+    } catch (error) {
+        showToast(error.message || 'Failed to update category', 'error');
+    }
+}
+
+async function deleteCategory(categoryId) {
+    if (!confirm('Delete this category? If it has incidents, it will be deactivated instead.')) return;
+    try {
+        await apiRequest(`${CATEGORIES_API}${categoryId}/`, { method: 'DELETE' });
+        showToast('Category deleted/deactivated', 'success');
+        await loadCategories();
+    } catch (error) {
+        showToast(error.message || 'Failed to delete category', 'error');
+    }
+}
+</script>
+{% endblock %}

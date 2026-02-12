@@ -50,6 +50,11 @@
                 <li class="nav-item" id="nav-admin-analytics" style="display: none;">
                     <a class="nav-link" href="/admin/analytics">Analytics</a>
                 </li>
+                <li class="nav-item" id="nav-admin-categories" style="display: none;">
+                    <a class="nav-link" href="/admin/categories">
+                        <i class="bi bi-tags"></i> Categories
+                    </a>
+                </li>
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item" id="nav-login" style="display: none;">
@@ -84,7 +89,7 @@
         // Hide all role-specific links initially
         const allNavItems = ['nav-user-dashboard', 'nav-new-report', 
                             'nav-responder-dashboard', 'nav-department-dashboard', 'nav-department-respondents',
-                            'nav-admin-dashboard', 'nav-admin-users', 'nav-admin-analytics'];
+                            'nav-admin-dashboard', 'nav-admin-users', 'nav-admin-analytics', 'nav-admin-categories'];
         allNavItems.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
@@ -117,6 +122,7 @@
                 document.getElementById('nav-admin-dashboard').style.display = 'block';
                 document.getElementById('nav-admin-users').style.display = 'block';
                 document.getElementById('nav-admin-analytics').style.display = 'block';
+                document.getElementById('nav-admin-categories').style.display = 'block';
             } else if (isDepartment) {
                 // Department: show command center and respondent management
                 document.getElementById('nav-department-dashboard').style.display = 'block';

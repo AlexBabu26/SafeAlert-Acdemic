@@ -135,6 +135,12 @@ def admin_users():
     return render_template('adminpanel/users.html')
 
 
+@bp.route('/admin/categories')
+def admin_categories():
+    """Admin category management page"""
+    return render_template('adminpanel/categories.html')
+
+
 # ==================== Static/Media Routes ====================
 
 @bp.route('/static/<path:filename>')
