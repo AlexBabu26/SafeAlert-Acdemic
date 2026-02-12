@@ -14,3 +14,4 @@ Pillow==10.1.0
 python-dotenv==1.0.0
 python-socketio==5.10.0
 eventlet==0.34.2
+phonenumbers==9.0.23
