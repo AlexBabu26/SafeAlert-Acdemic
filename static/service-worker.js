@@ -3,7 +3,7 @@
  * Provides offline support and caching
  */
 
-const CACHE_NAME = 'safealert-v1';
+const CACHE_NAME = 'safealert-v3';
 const STATIC_ASSETS = [
     '/',
     '/login',
@@ -52,6 +52,49 @@ self.addEventListener('fetch', (event) => {
 
     // Skip API requests (always fetch from network)
     if (event.request.url.includes('/api/')) {
+        return;
+    }
+
+    const requestUrl = new URL(event.request.url);
+    const isStaticAsset =
+        requestUrl.origin === self.location.origin &&
+        requestUrl.pathname.startsWith('/static/');
+
+    // For page navigations, prefer fresh HTML from network to avoid stale UI.
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetch(event.request)
+                .then((networkResponse) => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        const responseToCache = networkResponse.clone();
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, responseToCache);
+                        });
+                    }
+                    return networkResponse;
+                })
+                .catch(async () => {
+                    return (await caches.match(event.request)) || (await caches.match('/offline.html'));
+                })
+        );
+        return;
+    }
+
+    // Use network-first for static assets so UI/JS updates are visible immediately.
+    if (isStaticAsset) {
+        event.respondWith(
+            fetch(event.request)
+                .then((networkResponse) => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        const responseToCache = networkResponse.clone();
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, responseToCache);
+                        });
+                    }
+                    return networkResponse;
+                })
+                .catch(() => caches.match(event.request))
+        );
         return;
     }
 
