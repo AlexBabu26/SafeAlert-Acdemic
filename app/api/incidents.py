@@ -2,7 +2,7 @@
 Incidents API endpoints for users
 """
 from flask import Blueprint, request, jsonify, current_app
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
 from werkzeug.utils import secure_filename
 from marshmallow import ValidationError
 from pathlib import Path
@@ -134,17 +134,18 @@ def create_incident():
 
 
 @bp.route('/quick/', methods=['POST'])
-@jwt_required()
 def quick_report():
-    """Create a quick/panic emergency report with minimal data"""
+    """Create a quick/panic emergency report with minimal data.
+
+    This endpoint supports both authenticated and unauthenticated requests.
+    """
     if not request.is_json:
         return jsonify({'detail': 'JSON data required.'}), 400
-    
+
+    # Optional authentication: if JWT exists and is valid, link report to user.
+    verify_jwt_in_request(optional=True)
     current_user_id = get_jwt_identity()
-    user = User.query.get(int(current_user_id))
-    
-    if not user:
-        return jsonify({'detail': 'User not found.'}), 404
+    user = User.query.get(int(current_user_id)) if current_user_id else None
     
     schema = IncidentQuickReportSchema()
     
@@ -171,7 +172,8 @@ def quick_report():
     from app.models.incident import generate_tracking_code
     
     incident = IncidentReport(
-        user_id=user.id,
+        user_id=user.id if user else None,
+        is_anonymous=(user is None),
         category_id=category_id,
         severity=data.get('severity', 'CRITICAL'),
         title='Quick Emergency Report',
@@ -197,6 +199,7 @@ def quick_report():
     response_schema = IncidentReportSchema()
     return jsonify({
         'message': 'Emergency report submitted. Help is on the way.',
+        'tracking_code': incident.anonymous_tracking_code,
         'incident': response_schema.dump(incident)
     }), 201
 
@@ -266,16 +269,20 @@ def create_anonymous_incident():
 
 @bp.route('/track/<tracking_code>/', methods=['GET'])
 def track_anonymous_report(tracking_code):
-    """Track an anonymous report by tracking code"""
+    """Track a report by tracking code (anonymous or authenticated)."""
+    normalized_code = (tracking_code or '').strip().upper()
+    if not normalized_code:
+        return jsonify({'detail': 'Tracking code is required.'}), 400
+
+    # Tracking codes are generated in uppercase; normalize user input to match.
     incident = IncidentReport.query.filter_by(
-        anonymous_tracking_code=tracking_code,
-        is_anonymous=True
+        anonymous_tracking_code=normalized_code
     ).first()
     
     if not incident:
         return jsonify({'detail': 'Report not found.'}), 404
     
-    # Return limited info for anonymous tracking
+    # Return limited public tracking info.
     return jsonify({
         'tracking_code': incident.anonymous_tracking_code,
         'status': incident.status,

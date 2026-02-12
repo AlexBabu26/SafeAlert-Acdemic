@@ -644,8 +644,20 @@ def get_map_data(user):
         User.current_longitude.isnot(None)
     ).all()
     
-    # Get all departments
-    departments = Department.query.filter(Department.is_active == True).all()
+    # Get active departments with coordinates, but always include the logged-in department
+    # (even if pending activation) so department users can see their own marker.
+    departments_query = Department.query.filter(
+        Department.headquarters_lat.isnot(None),
+        Department.headquarters_lng.isnot(None)
+    )
+    if user.department_id:
+        departments_query = departments_query.filter(
+            or_(Department.is_active == True, Department.id == user.department_id)
+        )
+    else:
+        departments_query = departments_query.filter(Department.is_active == True)
+
+    departments = departments_query.all()
     
     return jsonify({
         'incidents': [{
