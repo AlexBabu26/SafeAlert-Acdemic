@@ -84,7 +84,7 @@ def list_categories(user):
     
     categories = query.order_by(Category.priority_order, Category.name).all()
     
-    schema = CategorySchema(many=True)
+    schema = CategorySchema()
     results = []
     
     for category in categories:
