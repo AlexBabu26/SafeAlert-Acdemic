@@ -2,8 +2,121 @@
 
 {% block title %}SafeAlert - Emergency Reporting Platform{% endblock %}
 
+{% block extra_css %}
+<style>
+    .landing-shell {
+        margin-top: 1.25rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .landing-hero {
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        box-shadow: 0 24px 60px rgba(37, 99, 235, 0.22);
+        overflow: hidden;
+    }
+
+    .landing-hero .sa-hero-inner {
+        max-width: 1180px;
+        padding: 0 1.25rem;
+    }
+
+    .hero-kicker {
+        font-weight: 650;
+        font-size: 0.92rem;
+    }
+
+    .hero-title {
+        font-size: clamp(2.2rem, 4vw, 3.4rem);
+        line-height: 1.05;
+        margin-bottom: 1rem;
+    }
+
+    .hero-copy {
+        max-width: 58ch;
+        margin-bottom: 1.35rem;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .hero-cta-row .btn {
+        min-width: 148px;
+    }
+
+    .hero-mini-points {
+        margin-top: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .hero-mini-points .badge {
+        background: rgba(255, 255, 255, 0.16) !important;
+        color: #fff !important;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .hero-side-card {
+        background: rgba(15, 23, 42, 0.55);
+        border: 1px solid rgba(148, 163, 184, 0.26);
+        border-radius: 18px;
+        backdrop-filter: blur(12px);
+    }
+
+    .hero-side-card h5 {
+        color: #fff;
+    }
+
+    .hero-side-card p {
+        color: rgba(226, 232, 240, 0.9) !important;
+        font-size: 0.93rem;
+    }
+
+    .hero-side-card hr {
+        border-color: rgba(148, 163, 184, 0.28);
+    }
+
+    .landing-feature-card {
+        border-radius: 16px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .landing-feature-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(37, 99, 235, 0.25);
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
+    }
+
+    .landing-feature-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(37, 99, 235, 0.12);
+    }
+
+    @media (max-width: 768px) {
+        .landing-shell {
+            margin-top: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .landing-hero {
+            border-radius: 16px;
+        }
+
+        .hero-cta-row .btn {
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="sa-hero">
+<div class="container-xxl landing-shell">
+<section class="sa-hero landing-hero">
     <div class="sa-hero-inner">
         <div class="row align-items-center g-4">
             <div class="col-lg-7">
@@ -11,23 +124,31 @@
                     <span class="sa-icon-badge">
                         <i class="bi bi-shield-exclamation fs-3"></i>
                     </span>
-                    <span class="badge bg-light text-dark">Emergency reporting platform</span>
+                    <span class="badge bg-light text-dark hero-kicker">Emergency reporting platform</span>
                 </div>
-                <h1 class="display-4 mb-3">SafeAlert</h1>
-                <p class="lead mb-4">
+                <h1 class="display-4 hero-title">Emergency reporting that gets help moving faster.</h1>
+                <p class="lead hero-copy">
                     Report incidents fast, track status updates, and communicate securely — all in one place.
                 </p>
-                <div class="d-flex gap-2 flex-wrap">
+                <div class="d-flex gap-2 flex-wrap hero-cta-row">
                     <a href="/register" class="btn btn-light btn-lg">
                         <i class="bi bi-person-plus"></i> Get Started
                     </a>
                     <a href="/login" class="btn btn-outline-light btn-lg">
                         <i class="bi bi-box-arrow-in-right"></i> Login
                     </a>
+                    <button type="button" class="btn btn-danger btn-lg" id="quick-report-btn">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Quick Report
+                    </button>
+                </div>
+                <div class="hero-mini-points">
+                    <span class="badge">Real-time status updates</span>
+                    <span class="badge">Location-aware reporting</span>
+                    <span class="badge">Tracking code for guests</span>
                 </div>
             </div>
             <div class="col-lg-5">
-                <div class="card border-0 shadow-lg">
+                <div class="card border-0 shadow-lg hero-side-card">
                     <div class="card-body p-4">
                         <div class="d-flex align-items-start gap-3">
                             <span class="sa-icon-badge" style="background: rgba(37, 99, 235, 0.12); border-color: rgba(37, 99, 235, 0.16);">
@@ -65,13 +186,12 @@
     </div>
 </section>
 
-<div class="container-xxl">
-    <div class="row g-4 mt-1">
+    <div class="row g-4 mt-2">
         <div class="col-md-4">
-            <div class="card h-100">
+            <div class="card h-100 landing-feature-card">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center gap-2 mb-2">
-                        <i class="bi bi-geo-alt text-primary"></i>
+                        <span class="landing-feature-icon"><i class="bi bi-geo-alt text-primary"></i></span>
                         <h6 class="mb-0">Better context</h6>
                     </div>
                     <p class="mb-0 text-muted">Add location details and attachments to help responders act faster.</p>
@@ -79,10 +199,10 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card h-100">
+            <div class="card h-100 landing-feature-card">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center gap-2 mb-2">
-                        <i class="bi bi-chat-dots text-primary"></i>
+                        <span class="landing-feature-icon"><i class="bi bi-chat-dots text-primary"></i></span>
                         <h6 class="mb-0">Two-way updates</h6>
                     </div>
                     <p class="mb-0 text-muted">Message threads keep communication clear and auditable.</p>
@@ -90,10 +210,10 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card h-100">
+            <div class="card h-100 landing-feature-card">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center gap-2 mb-2">
-                        <i class="bi bi-bar-chart text-primary"></i>
+                        <span class="landing-feature-icon"><i class="bi bi-bar-chart text-primary"></i></span>
                         <h6 class="mb-0">Admin insights</h6>
                     </div>
                     <p class="mb-0 text-muted">Analytics help identify trends and improve response planning.</p>
@@ -102,5 +222,98 @@
         </div>
     </div>
 </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const quickBtn = document.getElementById('quick-report-btn');
+    if (!quickBtn) return;
+
+    const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+    if (userInfo.is_staff === true) {
+        quickBtn.style.display = 'none';
+        return;
+    }
+
+    quickBtn.addEventListener('click', async function() {
+        showLoader();
+        try {
+            const coords = await resolveQuickReportLocation();
+            if (!coords) {
+                showToast('Could not detect your location for quick report.', 'error');
+                return;
+            }
+
+            const payload = {
+                latitude: coords.latitude,
+                longitude: coords.longitude,
+                severity: 'CRITICAL',
+                description: 'Quick emergency report from home page',
+            };
+
+            const response = await apiPost(`${API_ENDPOINTS.incidents}quick/`, payload);
+            const incidentId = response?.incident?.id;
+            const trackingCode = response?.tracking_code;
+
+            showToast(response?.message || 'Emergency report submitted.', 'success');
+            if (incidentId && isAuthenticated()) {
+                setTimeout(() => {
+                    window.location.href = `/reports/${incidentId}`;
+                }, 600);
+            } else if (trackingCode) {
+                setTimeout(() => {
+                    window.location.href = `/track?code=${encodeURIComponent(trackingCode)}`;
+                }, 600);
+            }
+        } catch (error) {
+            showToast(error.message || 'Failed to submit quick report.', 'error');
+        } finally {
+            hideLoader();
+        }
+    });
+});
+
+async function resolveQuickReportLocation() {
+    // 1) Browser geolocation (fast, accurate when permission granted)
+    try {
+        const position = await new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject(new Error('Geolocation not supported'));
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                resolve,
+                reject,
+                { enableHighAccuracy: true, timeout: 7000, maximumAge: 30000 }
+            );
+        });
+
+        return {
+            latitude: Number(position.coords.latitude),
+            longitude: Number(position.coords.longitude),
+        };
+    } catch (_) {
+        // Fall through to IP-based location fallback.
+    }
+
+    // 2) IP-based fallback
+    try {
+        const response = await fetch('https://ipapi.co/json/');
+        if (!response.ok) return null;
+        const geoData = await response.json();
+        if (!geoData || geoData.error || !geoData.latitude || !geoData.longitude) {
+            return null;
+        }
+        return {
+            latitude: Number(geoData.latitude),
+            longitude: Number(geoData.longitude),
+        };
+    } catch (_) {
+        return null;
+    }
+}
+</script>
 {% endblock %}
 

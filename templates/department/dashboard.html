@@ -22,9 +22,18 @@
         background: #f1f5f9;
     }
 
+    /* Make this dashboard full-bleed and viewport-fitted */
+    main.container-xxl.py-4 {
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+
     .command-center {
         display: flex;
-        height: calc(100vh - 60px);
+        height: calc(100vh - 56px);
+        min-height: calc(100vh - 56px);
+        width: 100%;
+        overflow: hidden;
     }
 
     .sidebar {
@@ -166,6 +175,7 @@
     .map-container {
         flex: 1;
         position: relative;
+        min-width: 0;
     }
 
     #map {
@@ -579,7 +589,7 @@
     <!-- Incidents Sidebar -->
     <div class="sidebar">
         <div class="sidebar-header">
-            <h5 class="mb-0">My Assigned Incidents</h5>
+            <h5 class="mb-0">All Active Incidents</h5>
         </div>
         
         <div class="stats-bar">
@@ -620,7 +630,7 @@
         </div>
         <div class="filter-bar" style="padding-top: 0.5rem; padding-bottom: 0.5rem;">
             <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; cursor: pointer;">
-                <input type="checkbox" id="show-all-incidents" onchange="applyFilters()" style="cursor: pointer;">
+                <input type="checkbox" id="show-all-incidents" onchange="applyFilters()" style="cursor: pointer;" checked>
                 <span>Show all incidents (not just assigned)</span>
             </label>
         </div>
@@ -676,10 +686,21 @@ const API_BASE = '/api/department';
 let map = null;
 let markers = { incidents: {}, responders: {}, departments: {} };
 let incidents = [];
+let mapIncidents = [];
 let selectedIncidentId = null;
 let socket = null;
 
 document.addEventListener('DOMContentLoaded', function() {
+    const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+    const isDepartment = userInfo.is_department === true;
+    const isAdmin = userInfo.is_staff === true;
+
+    // Department dashboard is strictly for department users.
+    if (!isDepartment || isAdmin) {
+        window.location.href = isAdmin ? '/admin/dashboard' : '/login';
+        return;
+    }
+
     initMap();
     loadIncidents();
     loadMapData();
@@ -694,7 +715,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initMap() {
-    map = L.map('map').setView([25.3463, 55.4209], 12);
+    // Default map center for department dashboard: Kottayam, Kerala.
+    map = L.map('map').setView([9.5916, 76.5222], 12);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
@@ -714,13 +736,13 @@ function loadIncidents() {
     let url = `${API_BASE}/incidents/?`;
     if (severity) url += `severity=${severity}&`;
     if (status) url += `status=${status}&`;
-    if (!showAll) url += `assigned_only=true&`;
+    // Always send this explicitly because backend defaults to assigned_only=true.
+    url += `assigned_only=${showAll ? 'false' : 'true'}&`;
     
     apiRequest(url)
         .then(data => {
             incidents = data.results || [];
             renderIncidentsList(incidents);
-            updateIncidentMarkers();
         })
         .catch(err => {
             console.error('Error loading incidents:', err);
@@ -732,6 +754,8 @@ function loadIncidents() {
 function loadMapData() {
     apiRequest(`${API_BASE}/map/`)
         .then(data => {
+            mapIncidents = data.incidents || [];
+            updateIncidentMarkers(mapIncidents);
             updateResponderMarkers(data.responders);
             updateDepartmentMarkers(data.departments);
         })
@@ -780,11 +804,11 @@ function renderIncidentsList(incidents) {
     `).join('');
 }
 
-function updateIncidentMarkers() {
+function updateIncidentMarkers(items = []) {
     Object.values(markers.incidents).forEach(m => map.removeLayer(m));
     markers.incidents = {};
     
-    incidents.forEach(inc => {
+    items.forEach(inc => {
         if (!inc.latitude || !inc.longitude) return;
         
         const color = inc.severity === 'CRITICAL' ? '#ef4444' : 
@@ -799,7 +823,7 @@ function updateIncidentMarkers() {
         
         const marker = L.marker([parseFloat(inc.latitude), parseFloat(inc.longitude)], { icon })
             .bindPopup(`
-                <strong>${inc.title || inc.category_name}</strong><br>
+                <strong>${inc.title || inc.category_name || inc.category || 'Incident'}</strong><br>
                 ${inc.severity} - ${inc.status}<br>
                 <a href="#" onclick="selectIncident(${inc.id}); return false;">View Details</a>
             `)
@@ -862,7 +886,7 @@ function selectIncident(id) {
         item.classList.toggle('selected', item.onclick.toString().includes(id));
     });
     loadIncidentDetails(id);
-    const incident = incidents.find(i => i.id === id);
+    const incident = incidents.find(i => i.id === id) || mapIncidents.find(i => i.id === id);
     if (incident && incident.latitude && incident.longitude) {
         map.setView([parseFloat(incident.latitude), parseFloat(incident.longitude)], 14);
         markers.incidents[id]?.openPopup();

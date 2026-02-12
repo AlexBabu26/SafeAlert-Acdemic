@@ -113,11 +113,10 @@
             }
             
             if (isAdmin) {
-                // Admin: show admin links and command center
+                // Admin: show only admin links
                 document.getElementById('nav-admin-dashboard').style.display = 'block';
                 document.getElementById('nav-admin-users').style.display = 'block';
                 document.getElementById('nav-admin-analytics').style.display = 'block';
-                document.getElementById('nav-department-dashboard').style.display = 'block';
             } else if (isDepartment) {
                 // Department: show command center and respondent management
                 document.getElementById('nav-department-dashboard').style.display = 'block';
