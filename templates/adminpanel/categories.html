@@ -133,6 +133,61 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="mappingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mapping-modal-title">Category Mappings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3 align-items-end mb-3">
+                    <input type="hidden" id="mapping-id">
+                    <div class="col-md-5">
+                        <label class="form-label">Department Type</label>
+                        <select class="form-select" id="mapping-department-type"></select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Priority</label>
+                        <input type="number" class="form-control" id="mapping-priority" min="1" value="1">
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-check mt-4">
+                            <input class="form-check-input" type="checkbox" id="mapping-is-required" checked>
+                            <label class="form-check-label" for="mapping-is-required">Required</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2 d-grid">
+                        <button class="btn btn-primary" id="btn-save-mapping">Add</button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Department Type</th>
+                                <th>Priority</th>
+                                <th>Required</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mappings-tbody">
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">No mappings yet</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" id="btn-cancel-mapping-edit" style="display: none;">Cancel Edit</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -140,6 +195,11 @@
 const CATEGORIES_API = '/api/admin/categories/';
 let categories = [];
 let categoryModal = null;
+let mappingModal = null;
+let currentMappingCategoryId = null;
+let currentMappings = [];
+let departmentTypeChoices = [];
+let departmentTypeDescriptions = {};
 
 document.addEventListener('DOMContentLoaded', function() {
     const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
@@ -149,10 +209,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     categoryModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+    mappingModal = new bootstrap.Modal(document.getElementById('mappingModal'));
+    loadDepartmentTypes();
     loadCategories();
 
     document.getElementById('btn-add-category').addEventListener('click', openCreateModal);
     document.getElementById('btn-save-category').addEventListener('click', saveCategory);
+    document.getElementById('btn-save-mapping').addEventListener('click', saveMapping);
+    document.getElementById('btn-cancel-mapping-edit').addEventListener('click', resetMappingForm);
     document.getElementById('btn-reset-filters').addEventListener('click', resetFilters);
     document.getElementById('category-search').addEventListener('input', renderCategories);
     document.getElementById('severity-filter').addEventListener('change', renderCategories);
@@ -210,6 +274,7 @@ function renderCategories() {
             </td>
             <td class="text-end pe-4">
                 <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal(${c.id})">Edit</button>
+                <button class="btn btn-sm btn-outline-info me-1" onclick="openMappingsModal(${c.id}, '${escapeHtml(c.name || '')}')">Mappings</button>
                 <button class="btn btn-sm ${c.is_active ? 'btn-outline-warning' : 'btn-outline-success'} me-1" onclick="toggleCategory(${c.id}, ${!c.is_active})">
                     ${c.is_active ? 'Deactivate' : 'Activate'}
                 </button>
@@ -226,6 +291,25 @@ function resetFilters() {
     renderCategories();
 }
 
+async function loadDepartmentTypes() {
+    try {
+        const data = await apiRequest(`${CATEGORIES_API}department-types/`);
+        departmentTypeChoices = data.department_types || [];
+        departmentTypeDescriptions = data.descriptions || {};
+        populateDepartmentTypeSelect();
+    } catch (error) {
+        showToast(error.message || 'Failed to load department types', 'error');
+    }
+}
+
+function populateDepartmentTypeSelect() {
+    const select = document.getElementById('mapping-department-type');
+    if (!select) return;
+    select.innerHTML = departmentTypeChoices.map(type => `
+        <option value="${type}">${type}${departmentTypeDescriptions[type] ? ` - ${departmentTypeDescriptions[type]}` : ''}</option>
+    `).join('');
+}
+
 function openCreateModal() {
     document.getElementById('category-modal-title').textContent = 'Add Category';
     document.getElementById('category-id').value = '';
@@ -237,6 +321,127 @@ function openCreateModal() {
     document.getElementById('category-priority-order').value = '0';
     document.getElementById('category-is-active').checked = true;
     categoryModal.show();
+}
+
+async function openMappingsModal(categoryId, categoryName) {
+    currentMappingCategoryId = categoryId;
+    document.getElementById('mapping-modal-title').textContent = `Category Mappings - ${categoryName}`;
+    resetMappingForm();
+    await loadMappings(categoryId);
+    mappingModal.show();
+}
+
+async function loadMappings(categoryId) {
+    try {
+        const data = await apiRequest(`${CATEGORIES_API}${categoryId}/mappings/`);
+        currentMappings = data.mappings || [];
+        renderMappingsTable();
+    } catch (error) {
+        currentMappings = [];
+        document.getElementById('mappings-tbody').innerHTML = `
+            <tr><td colspan="4" class="text-center py-4 text-danger">Failed to load mappings</td></tr>
+        `;
+        showToast(error.message || 'Failed to load mappings', 'error');
+    }
+}
+
+function renderMappingsTable() {
+    const tbody = document.getElementById('mappings-tbody');
+    if (!currentMappings.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-muted">No mappings yet</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = currentMappings.map(m => `
+        <tr>
+            <td><span class="fw-semibold">${m.department_type}</span></td>
+            <td>${m.priority ?? 1}</td>
+            <td>
+                <span class="badge ${m.is_required ? 'bg-success' : 'bg-secondary'}">
+                    ${m.is_required ? 'Yes' : 'No'}
+                </span>
+            </td>
+            <td class="text-end">
+                <button class="btn btn-sm btn-outline-primary me-1" onclick="editMapping(${m.id})">Edit</button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteMapping(${m.id})">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function editMapping(mappingId) {
+    const mapping = currentMappings.find(m => m.id === mappingId);
+    if (!mapping) return;
+
+    document.getElementById('mapping-id').value = mapping.id;
+    document.getElementById('mapping-department-type').value = mapping.department_type;
+    document.getElementById('mapping-department-type').disabled = true;
+    document.getElementById('mapping-priority').value = mapping.priority ?? 1;
+    document.getElementById('mapping-is-required').checked = !!mapping.is_required;
+    document.getElementById('btn-save-mapping').textContent = 'Update';
+    document.getElementById('btn-cancel-mapping-edit').style.display = 'inline-block';
+}
+
+function resetMappingForm() {
+    document.getElementById('mapping-id').value = '';
+    document.getElementById('mapping-department-type').disabled = false;
+    if (departmentTypeChoices.length) {
+        document.getElementById('mapping-department-type').value = departmentTypeChoices[0];
+    }
+    document.getElementById('mapping-priority').value = '1';
+    document.getElementById('mapping-is-required').checked = true;
+    document.getElementById('btn-save-mapping').textContent = 'Add';
+    document.getElementById('btn-cancel-mapping-edit').style.display = 'none';
+}
+
+async function saveMapping() {
+    if (!currentMappingCategoryId) return;
+
+    const mappingId = document.getElementById('mapping-id').value;
+    const payload = {
+        priority: parseInt(document.getElementById('mapping-priority').value || '1', 10),
+        is_required: document.getElementById('mapping-is-required').checked
+    };
+
+    if (!mappingId) {
+        payload.department_type = document.getElementById('mapping-department-type').value;
+    }
+
+    try {
+        showLoader();
+        if (mappingId) {
+            await apiRequest(`${CATEGORIES_API}${currentMappingCategoryId}/mappings/${mappingId}/`, {
+                method: 'PATCH',
+                body: JSON.stringify(payload)
+            });
+            showToast('Mapping updated', 'success');
+        } else {
+            await apiRequest(`${CATEGORIES_API}${currentMappingCategoryId}/mappings/`, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            showToast('Mapping created', 'success');
+        }
+        resetMappingForm();
+        await loadMappings(currentMappingCategoryId);
+        await loadCategories();
+    } catch (error) {
+        showToast(error.message || 'Failed to save mapping', 'error');
+    } finally {
+        hideLoader();
+    }
+}
+
+async function deleteMapping(mappingId) {
+    if (!confirm('Delete this mapping?')) return;
+    try {
+        await apiRequest(`${CATEGORIES_API}mappings/${mappingId}/`, { method: 'DELETE' });
+        showToast('Mapping deleted', 'success');
+        await loadMappings(currentMappingCategoryId);
+        await loadCategories();
+    } catch (error) {
+        showToast(error.message || 'Failed to delete mapping', 'error');
+    }
 }
 
 async function openEditModal(categoryId) {
