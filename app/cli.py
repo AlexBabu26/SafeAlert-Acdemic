@@ -261,6 +261,15 @@ def register_commands(app):
         """Create sample incident categories with department mappings"""
         categories_data = [
             {
+                'name': 'General Emergency',
+                'description': 'Quick panic-button reports requiring immediate multi-agency response',
+                'icon': '🆘',
+                'color': '#dc2626',
+                'default_severity': 'CRITICAL',
+                'is_quick_only': True,
+                'department_mappings': [('POLICE', 1), ('MEDICAL', 1)],
+            },
+            {
                 'name': 'Fire Emergency', 
                 'description': 'Fire incidents and fire-related emergencies',
                 'icon': '🔥',

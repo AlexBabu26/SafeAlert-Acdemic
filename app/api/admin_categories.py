@@ -65,8 +65,14 @@ class CategoryMappingSchema(Schema):
 class CategoryMappingCreateSchema(Schema):
     """Schema for creating a category-department mapping"""
     department_type = fields.Str(required=True, validate=validate.OneOf(DepartmentType.CHOICES))
-    priority = fields.Int(load_default=1)
-    is_required = fields.Bool(load_default=True)
+    priority        = fields.Int(load_default=1, validate=validate.Range(min=1, max=10))
+    is_required     = fields.Bool(load_default=True)
+
+
+class CategoryMappingUpdateSchema(Schema):
+    """Schema for updating an existing category-department mapping"""
+    priority    = fields.Int(required=False, validate=validate.Range(min=1, max=10))
+    is_required = fields.Bool(required=False)
 
 
 # ==================== Category CRUD ====================
@@ -297,15 +303,17 @@ def update_category_mapping(user, category_id, mapping_id):
     
     if not request.is_json:
         return jsonify({'detail': 'JSON data required.'}), 400
-    
-    # Only allow updating priority and is_required
-    priority = request.json.get('priority')
-    is_required = request.json.get('is_required')
-    
-    if priority is not None:
-        mapping.priority = priority
-    if is_required is not None:
-        mapping.is_required = is_required
+
+    schema = CategoryMappingUpdateSchema()
+    try:
+        data = schema.load(request.json, partial=True)
+    except ValidationError as err:
+        return jsonify(err.messages), 400
+
+    if 'priority' in data:
+        mapping.priority = data['priority']
+    if 'is_required' in data:
+        mapping.is_required = data['is_required']
     
     db.session.commit()
     

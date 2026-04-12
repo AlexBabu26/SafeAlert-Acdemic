@@ -64,6 +64,7 @@ class Category(db.Model):
     default_severity = db.Column(db.String(20), default='MEDIUM', nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     priority_order = db.Column(db.Integer, default=0)  # For sorting
+    is_quick_only = db.Column(db.Boolean, default=False, nullable=False)  # Hidden from regular report form; used only for Quick Reports
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     

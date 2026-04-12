@@ -21,6 +21,7 @@ from app.schemas.incident import (
 from app.utils.permissions import owner_required
 from app.utils.filters import apply_incident_filters, apply_ordering, paginate_query
 from app.services.notification import NotificationService
+from app.services.allocation import AllocationService
 from app.socketio_events import broadcast_incident_created
 
 bp = Blueprint('incidents', __name__)
@@ -154,15 +155,12 @@ def quick_report():
     except ValidationError as err:
         return jsonify(err.messages), 400
     
-    # Get category (default to first "Emergency" category if not specified)
+    # Get category — prefer the dedicated quick-only category, fall back to any active one
     category_id = data.get('category')
     if not category_id:
-        category = Category.query.filter(
-            Category.name.ilike('%emergency%'),
-            Category.is_active == True
-        ).first()
+        category = Category.query.filter_by(is_quick_only=True, is_active=True).first()
         if not category:
-            category = Category.query.filter(Category.is_active == True).first()
+            category = Category.query.filter_by(is_active=True).first()
         category_id = category.id if category else None
     
     if not category_id:
@@ -189,6 +187,17 @@ def quick_report():
     db.session.add(incident)
     db.session.commit()
     
+    # Auto-allocate to departments based on category mappings
+    try:
+        allocation_service = AllocationService()
+        allocation_service.auto_allocate(incident)
+        if incident.status == 'REPORTED':
+            incident.status = 'DISPATCHED'
+            incident.dispatch()
+            db.session.commit()
+    except Exception:
+        pass  # Don't fail the report if allocation has no available departments
+
     # Broadcast to dispatchers
     broadcast_incident_created(incident)
     

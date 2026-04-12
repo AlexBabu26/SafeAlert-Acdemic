@@ -23,6 +23,7 @@ from app.schemas.assignment import (
 )
 from app.schemas.incident import IncidentReportSchema
 from app.utils.permissions import responder_required, assignment_owner_required
+from app.utils.validators import validate_latitude, validate_longitude
 from app.services.notification import NotificationService
 from app.socketio_events import broadcast_assignment_status_changed, broadcast_incident_updated
 
@@ -270,7 +271,13 @@ def update_location(user):
     
     if latitude is None or longitude is None:
         return jsonify({'detail': 'Latitude and longitude required.'}), 400
-    
+
+    try:
+        validate_latitude(latitude)
+        validate_longitude(longitude)
+    except Exception as e:
+        return jsonify({'detail': str(e)}), 400
+
     user.update_location(latitude, longitude)
     db.session.commit()
     

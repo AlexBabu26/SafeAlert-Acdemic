@@ -1,7 +1,8 @@
 """
 Department-related schemas for SafeAlert
 """
-from marshmallow import Schema, fields, validate
+from marshmallow import Schema, fields, validate, validates
+from app.utils.validators import validate_phone_number, validate_latitude, validate_longitude
 
 
 class DepartmentSchema(Schema):
@@ -48,8 +49,23 @@ class DepartmentCreateSchema(Schema):
     
     dispatch_phone = fields.Str(allow_none=True)
     dispatch_email = fields.Email(allow_none=True)
-    
+
     is_24_7 = fields.Bool(missing=True)
+
+    @validates('dispatch_phone')
+    def validate_dispatch_phone(self, value):
+        if value:
+            return validate_phone_number(value)
+
+    @validates('headquarters_lat')
+    def validate_lat(self, value):
+        if value is not None:
+            validate_latitude(value)
+
+    @validates('headquarters_lng')
+    def validate_lng(self, value):
+        if value is not None:
+            validate_longitude(value)
 
 
 class DepartmentListSchema(Schema):

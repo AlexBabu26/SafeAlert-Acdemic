@@ -51,15 +51,25 @@ document.getElementById('reset-password-form').addEventListener('submit', async 
     const confirmPassword = document.getElementById('confirm_password').value;
     const token = document.getElementById('token').value;
     
+    // Validate password strength (mirrors backend rules)
+    if (newPassword.length < 8) {
+        showError('Password must be at least 8 characters long.');
+        return;
+    }
+    if (!/[a-zA-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+        showError('Password must contain at least one letter and one digit.');
+        return;
+    }
+    const commonPasswords = ['password','password1','12345678','123456789','qwerty123','qwertyui',
+        'abc12345','abc123456','iloveyou','admin123','letmein1','welcome1','monkey123','dragon123'];
+    if (commonPasswords.includes(newPassword.toLowerCase())) {
+        showError('This password is too common. Please choose a stronger one.');
+        return;
+    }
+
     // Validate passwords match
     if (newPassword !== confirmPassword) {
         showError('Passwords do not match.');
-        return;
-    }
-    
-    // Validate password length
-    if (newPassword.length < 8) {
-        showError('Password must be at least 8 characters long.');
         return;
     }
     

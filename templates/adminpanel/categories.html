@@ -606,7 +606,8 @@ async function saveCategory() {
         priority_order:   parseInt(document.getElementById('category-priority-order').value || '0', 10),
         is_active:        document.getElementById('category-is-active').checked
     };
-    if (!payload.name) { showToast('Category name is required', 'error'); return; }
+    if (!payload.name) { showToast('Category name is required.', 'error'); return; }
+    if (payload.name.length > 100) { showToast('Category name must not exceed 100 characters.', 'error'); return; }
 
     try {
         showLoader();

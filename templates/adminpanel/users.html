@@ -628,7 +628,7 @@ function viewUser(userId) {
                         </div>
                         <div class="mb-3">
                             <label class="form-label small">Badge Number</label>
-                            <input type="text" class="form-control" id="edit-badge" value="${user.badge_number || ''}">
+                            <input type="text" class="form-control" id="edit-badge" value="${user.badge_number || ''}" maxlength="50">
                         </div>
                     </div>
                 </div>
@@ -648,7 +648,13 @@ function viewUser(userId) {
 
 function saveUserChanges() {
     if (!currentUserId) return;
-    
+
+    const badgeNumber = document.getElementById('edit-badge').value;
+    if (badgeNumber && badgeNumber.length > 50) {
+        showToast('Badge number must not exceed 50 characters.', 'error');
+        return;
+    }
+
     const data = {
         is_active: document.getElementById('edit-is-active').value === 'true',
         is_staff: document.getElementById('edit-is-staff').checked,

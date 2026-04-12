@@ -1,8 +1,9 @@
 """
 Incident-related schemas for SafeAlert
 """
-from marshmallow import Schema, fields, validate, ValidationError
+from marshmallow import Schema, fields, validate, ValidationError, validates
 from decimal import Decimal
+from app.utils.validators import validate_latitude, validate_longitude, non_blank
 
 
 class CategorySchema(Schema):
@@ -160,33 +161,60 @@ class IncidentReportSchema(Schema):
 
 class IncidentReportCreateSchema(Schema):
     """Schema for creating IncidentReport"""
-    category = fields.Int(required=True, data_key='category', load_only=True)
-    severity = fields.Str(required=False, missing='MEDIUM', validate=validate.OneOf([
+    category    = fields.Int(required=True, data_key='category', load_only=True)
+    severity    = fields.Str(required=False, load_default='MEDIUM', validate=validate.OneOf([
         'CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'
     ]))
-    title = fields.Str(required=False, allow_none=True, default='')
-    description = fields.Str(required=True)
-    location_text = fields.Str(required=False, allow_none=True, default='')
-    address_formatted = fields.Str(required=False, allow_none=True)
-    landmark_description = fields.Str(required=False, allow_none=True)
-    latitude = fields.Decimal(required=False, allow_none=True, as_string=True, places=6)
+    title       = fields.Str(required=False, allow_none=True, load_default='',
+                             validate=validate.Length(max=200))
+    description = fields.Str(required=True,
+                             validate=validate.Length(min=10, max=5000))
+    location_text        = fields.Str(required=False, allow_none=True, load_default='',
+                                      validate=validate.Length(max=500))
+    address_formatted    = fields.Str(required=False, allow_none=True)
+    landmark_description = fields.Str(required=False, allow_none=True,
+                                      validate=validate.Length(max=255))
+    latitude  = fields.Decimal(required=False, allow_none=True, as_string=True, places=6)
     longitude = fields.Decimal(required=False, allow_none=True, as_string=True, places=6)
-    
-    # Optional fields
-    estimated_affected_people = fields.Int(required=False, allow_none=True)
-    requires_evacuation = fields.Bool(required=False, missing=False)
-    
-    # For anonymous reporting
-    is_anonymous = fields.Bool(required=False, missing=False)
+
+    estimated_affected_people = fields.Int(required=False, allow_none=True,
+                                           validate=validate.Range(min=0, max=1_000_000))
+    requires_evacuation = fields.Bool(required=False, load_default=False)
+    is_anonymous        = fields.Bool(required=False, load_default=False)
+
+    @validates('description')
+    def validate_description(self, value):
+        non_blank(value)
+
+    @validates('latitude')
+    def validate_lat(self, value):
+        if value is not None:
+            validate_latitude(value)
+
+    @validates('longitude')
+    def validate_lng(self, value):
+        if value is not None:
+            validate_longitude(value)
 
 
 class IncidentQuickReportSchema(Schema):
     """Schema for quick/panic report (minimal data)"""
-    category = fields.Int(required=False, allow_none=True)  # Optional, defaults to "Emergency"
-    severity = fields.Str(required=False, missing='CRITICAL')
-    latitude = fields.Decimal(required=True, as_string=True, places=6)
-    longitude = fields.Decimal(required=True, as_string=True, places=6)
-    description = fields.Str(required=False, missing='Quick emergency report')
+    category    = fields.Int(required=False, allow_none=True)
+    severity    = fields.Str(required=False, load_default='CRITICAL', validate=validate.OneOf([
+        'CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'
+    ]))
+    latitude    = fields.Decimal(required=True, as_string=True, places=6)
+    longitude   = fields.Decimal(required=True, as_string=True, places=6)
+    description = fields.Str(required=False, load_default='Quick emergency report',
+                             validate=validate.Length(max=1000))
+
+    @validates('latitude')
+    def validate_lat(self, value):
+        validate_latitude(value)
+
+    @validates('longitude')
+    def validate_lng(self, value):
+        validate_longitude(value)
 
 
 class IncidentStatusUpdateSchema(Schema):

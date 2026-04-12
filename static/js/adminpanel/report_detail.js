@@ -42,11 +42,21 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         
         const message = document.getElementById('message').value;
+        const messageTrimmed = message.trim();
+
+        if (!messageTrimmed) {
+            showToast('Message cannot be blank.', 'error');
+            return;
+        }
+        if (messageTrimmed.length > 2000) {
+            showToast('Message must not exceed 2000 characters.', 'error');
+            return;
+        }
 
         try {
             showLoader();
             await apiPost(`${API_ENDPOINTS.incidents}${reportId}/messages/`, {
-                message: message,
+                message: messageTrimmed,
             });
 
             showToast('Message sent successfully!', 'success');

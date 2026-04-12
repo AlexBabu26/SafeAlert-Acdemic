@@ -46,6 +46,43 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        // ── Field validation (mirrors backend schema) ──
+        const descriptionTrimmed = description.trim();
+        if (!descriptionTrimmed) {
+            showToast('Description cannot be blank.', 'error');
+            return;
+        }
+        if (descriptionTrimmed.length < 10) {
+            showToast('Description must be at least 10 characters.', 'error');
+            return;
+        }
+        if (descriptionTrimmed.length > 5000) {
+            showToast('Description must not exceed 5000 characters.', 'error');
+            return;
+        }
+        if (title && title.length > 200) {
+            showToast('Title must not exceed 200 characters.', 'error');
+            return;
+        }
+        if (location_text && location_text.length > 500) {
+            showToast('Location text must not exceed 500 characters.', 'error');
+            return;
+        }
+        if (latitude) {
+            const lat = parseFloat(latitude);
+            if (isNaN(lat) || lat < -90 || lat > 90) {
+                showToast('Invalid latitude value.', 'error');
+                return;
+            }
+        }
+        if (longitude) {
+            const lng = parseFloat(longitude);
+            if (isNaN(lng) || lng < -180 || lng > 180) {
+                showToast('Invalid longitude value.', 'error');
+                return;
+            }
+        }
+
         try {
             showLoader();
 

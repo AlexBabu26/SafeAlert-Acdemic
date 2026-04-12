@@ -8,6 +8,7 @@ from marshmallow import ValidationError
 from app.models import User, Department, DepartmentType
 from app.extensions import db
 from app.schemas.user import UserRegistrationSchema, UserSchema
+from app.utils.validators import validate_password_strength
 import re
 import secrets
 
@@ -375,9 +376,11 @@ def reset_password():
     
     if not new_password:
         return jsonify({'new_password': ['New password is required.']}), 400
-    
-    if len(new_password) < 8:
-        return jsonify({'new_password': ['Password must be at least 8 characters.']}), 400
+
+    try:
+        validate_password_strength(new_password)
+    except Exception as e:
+        return jsonify({'new_password': [str(e)]}), 400
     
     # Find user by token
     user = User.query.filter_by(reset_token=token).first()

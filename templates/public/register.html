@@ -628,22 +628,35 @@ document.getElementById('register-form').addEventListener('submit', async functi
     const password2 = document.getElementById('password2').value;
     
     // Basic validation
+    // ── Password strength (mirrors backend rules) ──
+    if (password.length < 8) {
+        showToast('Password must be at least 8 characters.', 'error');
+        return;
+    }
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasDigit  = /[0-9]/.test(password);
+    if (!hasLetter || !hasDigit) {
+        showToast('Password must contain at least one letter and one digit.', 'error');
+        return;
+    }
+    const commonPasswords = ['password','password1','12345678','123456789','qwerty123','qwertyui',
+        'abc12345','abc123456','iloveyou','admin123','letmein1','welcome1','monkey123','dragon123'];
+    if (commonPasswords.includes(password.toLowerCase())) {
+        showToast('This password is too common. Please choose a stronger one.', 'error');
+        return;
+    }
+
     if (password !== password2) {
         showToast('Passwords do not match', 'error');
         return;
     }
     
-    if (password.length < 8) {
-        showToast('Password must be at least 8 characters', 'error');
-        return;
-    }
-
-    // Optional phone validation (Indian numbers only)
+    // Optional phone validation — Indian numbers only (national or +91 format)
     if (phoneNumber) {
-        const normalized = phoneNumber.replace(/[\s()-]/g, '');
+        const normalized = phoneNumber.replace(/[\s\-().]/g, '');
         const indianPhoneRegex = /^(\+91)?[6-9]\d{9}$/;
         if (!indianPhoneRegex.test(normalized)) {
-            showToast('Enter a valid Indian phone number (e.g., +91 9876543210).', 'error');
+            showToast('Enter a valid Indian phone number (e.g. +91 9876543210 or 9876543210).', 'error');
             return;
         }
     }
@@ -663,8 +676,18 @@ document.getElementById('register-form').addEventListener('submit', async functi
             showToast('Please select a department type', 'error');
             return;
         }
+        const deptLat = parseFloat(document.getElementById('dept_latitude').value);
+        const deptLng = parseFloat(document.getElementById('dept_longitude').value);
         if (!document.getElementById('dept_latitude').value || !document.getElementById('dept_longitude').value) {
             showToast('Please set your office location', 'error');
+            return;
+        }
+        if (isNaN(deptLat) || deptLat < -90 || deptLat > 90) {
+            showToast('Invalid latitude. Must be between -90 and 90.', 'error');
+            return;
+        }
+        if (isNaN(deptLng) || deptLng < -180 || deptLng > 180) {
+            showToast('Invalid longitude. Must be between -180 and 180.', 'error');
             return;
         }
     }
