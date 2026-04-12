@@ -89,8 +89,9 @@ def list_categories(user):
     
     for category in categories:
         result = schema.dump(category)
-        # Include mapping count
-        result['mapping_count'] = category.department_mappings.count()
+        mappings = category.department_mappings.order_by(CategoryDepartmentMapping.priority).all()
+        result['mapping_count'] = len(mappings)
+        result['mapping_names'] = [m.department_type for m in mappings]
         results.append(result)
     
     return jsonify({

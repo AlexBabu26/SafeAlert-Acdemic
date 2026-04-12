@@ -2,6 +2,90 @@
 
 {% block title %}Category Management - SafeAlert Admin{% endblock %}
 
+{% block extra_css %}
+<style>
+/* ── Severity badge colours ── */
+.sev-CRITICAL { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.sev-HIGH     { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+.sev-MEDIUM   { background: #fefce8; color: #ca8a04; border: 1px solid #fde68a; }
+.sev-LOW      { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+.sev-INFO     { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+
+/* ── Department type badge colours ── */
+.dept-FIRE    { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.dept-POLICE  { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+.dept-MEDICAL { background: #fdf2f8; color: #db2777; border: 1px solid #fbcfe8; }
+.dept-HAZMAT  { background: #fefce8; color: #ca8a04; border: 1px solid #fde68a; }
+.dept-RESCUE  { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+.dept-TRAFFIC { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+
+.dept-badge, .sev-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: .03em;
+    padding: 3px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+/* ── Category colour swatch ── */
+.cat-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    border: 1.5px solid rgba(0,0,0,.08);
+}
+
+/* ── Table refinements ── */
+#categories-tbody tr { vertical-align: middle; }
+#categories-tbody td { padding-top: .75rem; padding-bottom: .75rem; }
+
+/* ── Icon action buttons ── */
+.btn-icon {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: .8rem;
+}
+
+/* ── Filter bar ── */
+.filter-bar { background: var(--sa-surface); border: 1px solid var(--sa-border); border-radius: var(--sa-radius); padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; }
+
+/* ── Mapping add form ── */
+.mapping-form-area {
+    background: var(--sa-surface-2);
+    border: 1px solid var(--sa-border);
+    border-radius: var(--sa-radius-sm);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+/* ── Priority pill ── */
+.priority-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: .72rem;
+    font-weight: 700;
+    background: var(--sa-surface-2);
+    border: 1px solid var(--sa-border);
+    color: var(--sa-muted);
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="sa-page-header">
     <div>
@@ -10,44 +94,45 @@
     </div>
     <div class="sa-page-actions">
         <button class="btn btn-primary" id="btn-add-category">
-            <i class="bi bi-plus-lg"></i> Add Category
+            <i class="bi bi-plus-lg me-1"></i> Add Category
         </button>
     </div>
 </div>
 
-<div class="card shadow mb-4">
-    <div class="card-body p-4">
-        <div class="row g-3">
-            <div class="col-md-4">
-                <label class="form-label">Search</label>
-                <input type="text" class="form-control" id="category-search" placeholder="Name or description">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Severity</label>
-                <select class="form-select" id="severity-filter">
-                    <option value="">All Severities</option>
-                    <option value="CRITICAL">CRITICAL</option>
-                    <option value="HIGH">HIGH</option>
-                    <option value="MEDIUM">MEDIUM</option>
-                    <option value="LOW">LOW</option>
-                    <option value="INFO">INFO</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Status</label>
-                <select class="form-select" id="status-filter">
-                    <option value="">All</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                </select>
-            </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <button class="btn btn-outline-secondary w-100" id="btn-reset-filters">Reset</button>
-            </div>
+<!-- Filter bar -->
+<div class="filter-bar d-flex flex-wrap gap-3 align-items-end">
+    <div class="flex-grow-1" style="min-width:200px">
+        <label class="form-label small mb-1">Search</label>
+        <div class="input-group input-group-sm">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" id="category-search" placeholder="Name or description…">
         </div>
     </div>
+    <div style="min-width:150px">
+        <label class="form-label small mb-1">Severity</label>
+        <select class="form-select form-select-sm" id="severity-filter">
+            <option value="">All Severities</option>
+            <option value="CRITICAL">Critical</option>
+            <option value="HIGH">High</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="LOW">Low</option>
+            <option value="INFO">Info</option>
+        </select>
+    </div>
+    <div style="min-width:130px">
+        <label class="form-label small mb-1">Status</label>
+        <select class="form-select form-select-sm" id="status-filter">
+            <option value="">All</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+        </select>
+    </div>
+    <button class="btn btn-sm btn-outline-secondary" id="btn-reset-filters">
+        <i class="bi bi-x-circle me-1"></i>Reset
+    </button>
 </div>
 
+<!-- Categories table -->
 <div class="card shadow">
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -55,9 +140,9 @@
                 <thead>
                     <tr>
                         <th class="ps-4">Category</th>
-                        <th>Default Severity</th>
-                        <th>Priority</th>
-                        <th>Mappings</th>
+                        <th>Severity</th>
+                        <th class="text-center">Priority</th>
+                        <th>Department Mappings</th>
                         <th>Status</th>
                         <th class="text-end pe-4">Actions</th>
                     </tr>
@@ -65,7 +150,7 @@
                 <tbody id="categories-tbody">
                     <tr>
                         <td colspan="6" class="text-center py-5">
-                            <div class="spinner-border text-primary" role="status"></div>
+                            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading…</span></div>
                         </td>
                     </tr>
                 </tbody>
@@ -74,6 +159,7 @@
     </div>
 </div>
 
+<!-- ── Category create / edit modal ── -->
 <div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -85,42 +171,43 @@
                 <form id="category-form">
                     <input type="hidden" id="category-id">
                     <div class="row g-3">
-                        <div class="col-md-8">
+                        <div class="col-md-7">
                             <label class="form-label">Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="category-name" required maxlength="100">
+                            <input type="text" class="form-control" id="category-name" required maxlength="100" placeholder="e.g. Fire Emergency">
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Icon (emoji or text)</label>
-                            <input type="text" class="form-control" id="category-icon" maxlength="50" placeholder="🔥">
+                        <div class="col-md-2">
+                            <label class="form-label">Icon</label>
+                            <input type="text" class="form-control text-center fs-5" id="category-icon" maxlength="10" placeholder="🔥">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Colour</label>
+                            <div class="input-group">
+                                <input type="color" class="form-control form-control-color" id="category-color-picker" value="#2563eb" title="Pick colour">
+                                <input type="text" class="form-control font-monospace" id="category-color" placeholder="#FF5722" maxlength="20">
+                            </div>
                         </div>
                         <div class="col-12">
                             <label class="form-label">Description</label>
-                            <textarea class="form-control" id="category-description" rows="3"></textarea>
+                            <textarea class="form-control" id="category-description" rows="2" placeholder="Short description of this category…"></textarea>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-5">
                             <label class="form-label">Default Severity</label>
                             <select class="form-select" id="category-default-severity">
-                                <option value="CRITICAL">CRITICAL</option>
-                                <option value="HIGH">HIGH</option>
-                                <option value="MEDIUM">MEDIUM</option>
-                                <option value="LOW">LOW</option>
-                                <option value="INFO">INFO</option>
+                                <option value="CRITICAL">🔴 Critical</option>
+                                <option value="HIGH">🟠 High</option>
+                                <option value="MEDIUM">🟡 Medium</option>
+                                <option value="LOW">🔵 Low</option>
+                                <option value="INFO">🟢 Info</option>
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Color</label>
-                            <input type="text" class="form-control" id="category-color" placeholder="#FF5722" maxlength="20">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Priority Order</label>
+                            <label class="form-label">Priority Order <span class="text-muted small">(sort)</span></label>
                             <input type="number" class="form-control" id="category-priority-order" value="0" min="0">
                         </div>
-                        <div class="col-12">
+                        <div class="col-md-3 d-flex align-items-end pb-1">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="category-is-active" checked>
-                                <label class="form-check-label" for="category-is-active">
-                                    Active category
-                                </label>
+                                <label class="form-check-label" for="category-is-active">Active</label>
                             </div>
                         </div>
                     </div>
@@ -128,62 +215,63 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="btn-save-category">Save Category</button>
+                <button type="button" class="btn btn-primary" id="btn-save-category"><i class="bi bi-check-lg me-1"></i>Save Category</button>
             </div>
         </div>
     </div>
 </div>
 
+<!-- ── Mappings modal ── -->
 <div class="modal fade" id="mappingModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="mapping-modal-title">Category Mappings</h5>
+                <div>
+                    <h5 class="modal-title mb-0" id="mapping-modal-title">Department Mappings</h5>
+                    <p class="text-muted small mb-0 mt-1">Define which departments respond to this category and in what order.</p>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="row g-3 align-items-end mb-3">
+                <!-- Add / edit form -->
+                <div class="mapping-form-area">
+                    <p class="fw-semibold small mb-2 text-muted text-uppercase" style="letter-spacing:.05em" id="mapping-form-label">Add Mapping</p>
                     <input type="hidden" id="mapping-id">
-                    <div class="col-md-5">
-                        <label class="form-label">Department Type</label>
-                        <select class="form-select" id="mapping-department-type"></select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Priority</label>
-                        <input type="number" class="form-control" id="mapping-priority" min="1" value="1">
-                    </div>
-                    <div class="col-md-2">
-                        <div class="form-check mt-4">
-                            <input class="form-check-input" type="checkbox" id="mapping-is-required" checked>
-                            <label class="form-check-label" for="mapping-is-required">Required</label>
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-5">
+                            <label class="form-label small mb-1">Department Type</label>
+                            <select class="form-select form-select-sm" id="mapping-department-type"></select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small mb-1">Dispatch Priority</label>
+                            <input type="number" class="form-control form-control-sm" id="mapping-priority" min="1" value="1" placeholder="1 = primary">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-center pt-3">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="checkbox" id="mapping-is-required" checked>
+                                <label class="form-check-label small" for="mapping-is-required">Required</label>
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-grid">
+                            <button class="btn btn-sm btn-primary" id="btn-save-mapping"><i class="bi bi-plus-lg me-1"></i><span id="btn-save-mapping-label">Add</span></button>
                         </div>
                     </div>
-                    <div class="col-md-2 d-grid">
-                        <button class="btn btn-primary" id="btn-save-mapping">Add</button>
+                    <div class="mt-2" id="mapping-cancel-row" style="display:none">
+                        <button class="btn btn-sm btn-outline-secondary" id="btn-cancel-mapping-edit"><i class="bi bi-x me-1"></i>Cancel Edit</button>
                     </div>
                 </div>
 
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover">
-                        <thead>
-                            <tr>
-                                <th>Department Type</th>
-                                <th>Priority</th>
-                                <th>Required</th>
-                                <th class="text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="mappings-tbody">
-                            <tr>
-                                <td colspan="4" class="text-center py-4 text-muted">No mappings yet</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- Mappings list -->
+                <div id="mappings-list-area">
+                    <div class="text-center py-4 text-muted" id="mappings-empty" style="display:none">
+                        <i class="bi bi-diagram-3 fs-2 d-block mb-2 opacity-50"></i>
+                        No department mappings yet. Add one above.
+                    </div>
+                    <div id="mappings-cards"></div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" id="btn-cancel-mapping-edit" style="display: none;">Cancel Edit</button>
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Done</button>
             </div>
         </div>
     </div>
@@ -201,15 +289,19 @@ let currentMappings = [];
 let departmentTypeChoices = [];
 let departmentTypeDescriptions = {};
 
+// Severity → CSS class
+const SEV_CLASS = { CRITICAL:'sev-CRITICAL', HIGH:'sev-HIGH', MEDIUM:'sev-MEDIUM', LOW:'sev-LOW', INFO:'sev-INFO' };
+const SEV_ICON  = { CRITICAL:'🔴', HIGH:'🟠', MEDIUM:'🟡', LOW:'🔵', INFO:'🟢' };
+
+// Dept type → icon
+const DEPT_ICON = { FIRE:'🔥', POLICE:'👮', MEDICAL:'🏥', HAZMAT:'☢️', RESCUE:'🚁', TRAFFIC:'🚦' };
+
 document.addEventListener('DOMContentLoaded', function() {
     const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
-    if (!userInfo.is_staff) {
-        window.location.href = '/login';
-        return;
-    }
+    if (!userInfo.is_staff) { window.location.href = '/login'; return; }
 
     categoryModal = new bootstrap.Modal(document.getElementById('categoryModal'));
-    mappingModal = new bootstrap.Modal(document.getElementById('mappingModal'));
+    mappingModal  = new bootstrap.Modal(document.getElementById('mappingModal'));
     loadDepartmentTypes();
     loadCategories();
 
@@ -221,7 +313,17 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('category-search').addEventListener('input', renderCategories);
     document.getElementById('severity-filter').addEventListener('change', renderCategories);
     document.getElementById('status-filter').addEventListener('change', renderCategories);
+
+    // Sync colour picker ↔ hex text input
+    const picker = document.getElementById('category-color-picker');
+    const hex    = document.getElementById('category-color');
+    picker.addEventListener('input', () => { hex.value = picker.value; });
+    hex.addEventListener('input', () => {
+        if (/^#[0-9a-fA-F]{6}$/.test(hex.value)) picker.value = hex.value;
+    });
 });
+
+// ── Data loading ─────────────────────────────────────────────────────────────
 
 async function loadCategories() {
     try {
@@ -229,72 +331,16 @@ async function loadCategories() {
         categories = data.results || [];
         renderCategories();
     } catch (error) {
-        document.getElementById('categories-tbody').innerHTML = `
-            <tr><td colspan="6" class="text-center text-danger py-4">Failed to load categories</td></tr>
-        `;
+        document.getElementById('categories-tbody').innerHTML =
+            `<tr><td colspan="6" class="text-center text-danger py-4">Failed to load categories</td></tr>`;
         showToast(error.message || 'Failed to load categories', 'error');
     }
-}
-
-function renderCategories() {
-    const tbody = document.getElementById('categories-tbody');
-    const search = (document.getElementById('category-search').value || '').toLowerCase().trim();
-    const severity = document.getElementById('severity-filter').value;
-    const status = document.getElementById('status-filter').value;
-
-    let filtered = categories.filter(c => {
-        const matchesSearch = !search ||
-            (c.name || '').toLowerCase().includes(search) ||
-            (c.description || '').toLowerCase().includes(search);
-        const matchesSeverity = !severity || c.default_severity === severity;
-        const matchesStatus = !status ||
-            (status === 'active' && c.is_active) ||
-            (status === 'inactive' && !c.is_active);
-        return matchesSearch && matchesSeverity && matchesStatus;
-    });
-
-    if (!filtered.length) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">No categories found</td></tr>`;
-        return;
-    }
-
-    tbody.innerHTML = filtered.map(c => `
-        <tr>
-            <td class="ps-4">
-                <div class="fw-semibold">${escapeHtml(c.icon || '')} ${escapeHtml(c.name || '')}</div>
-                <div class="small text-muted">${escapeHtml(c.description || '')}</div>
-            </td>
-            <td><span class="badge bg-secondary">${escapeHtml(c.default_severity || 'MEDIUM')}</span></td>
-            <td>${c.priority_order ?? 0}</td>
-            <td>${c.mapping_count ?? 0}</td>
-            <td>
-                <span class="badge ${c.is_active ? 'bg-success' : 'bg-secondary'}">
-                    ${c.is_active ? 'Active' : 'Inactive'}
-                </span>
-            </td>
-            <td class="text-end pe-4">
-                <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal(${c.id})">Edit</button>
-                <button class="btn btn-sm btn-outline-info me-1" onclick="openMappingsModal(${c.id}, '${escapeHtml(c.name || '')}')">Mappings</button>
-                <button class="btn btn-sm ${c.is_active ? 'btn-outline-warning' : 'btn-outline-success'} me-1" onclick="toggleCategory(${c.id}, ${!c.is_active})">
-                    ${c.is_active ? 'Deactivate' : 'Activate'}
-                </button>
-                <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory(${c.id})">Delete</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-function resetFilters() {
-    document.getElementById('category-search').value = '';
-    document.getElementById('severity-filter').value = '';
-    document.getElementById('status-filter').value = '';
-    renderCategories();
 }
 
 async function loadDepartmentTypes() {
     try {
         const data = await apiRequest(`${CATEGORIES_API}department-types/`);
-        departmentTypeChoices = data.department_types || [];
+        departmentTypeChoices    = data.department_types || [];
         departmentTypeDescriptions = data.descriptions || {};
         populateDepartmentTypeSelect();
     } catch (error) {
@@ -302,30 +348,99 @@ async function loadDepartmentTypes() {
     }
 }
 
+// ── Rendering ─────────────────────────────────────────────────────────────────
+
+function sevBadge(sev) {
+    const cls = SEV_CLASS[sev] || 'sev-INFO';
+    const ico = SEV_ICON[sev]  || '';
+    return `<span class="sev-badge ${cls}">${ico} ${escapeHtml(sev || 'MEDIUM')}</span>`;
+}
+
+function deptBadge(type) {
+    const ico = DEPT_ICON[type] || '🏢';
+    return `<span class="dept-badge dept-${type}" title="${escapeHtml(departmentTypeDescriptions[type] || type)}">${ico} ${escapeHtml(type)}</span>`;
+}
+
+function renderCategories() {
+    const tbody    = document.getElementById('categories-tbody');
+    const search   = (document.getElementById('category-search').value || '').toLowerCase().trim();
+    const severity = document.getElementById('severity-filter').value;
+    const status   = document.getElementById('status-filter').value;
+
+    const filtered = categories.filter(c => {
+        const matchesSearch   = !search   || (c.name||'').toLowerCase().includes(search) || (c.description||'').toLowerCase().includes(search);
+        const matchesSeverity = !severity || c.default_severity === severity;
+        const matchesStatus   = !status   || (status === 'active' && c.is_active) || (status === 'inactive' && !c.is_active);
+        return matchesSearch && matchesSeverity && matchesStatus;
+    });
+
+    if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-5">
+            <i class="bi bi-inbox fs-2 d-block mb-2 opacity-50"></i>No categories found</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(c => {
+        const swatch = c.color
+            ? `<span class="cat-swatch me-2" style="background:${escapeHtml(c.color)}"></span>`
+            : '';
+        const mappingBadges = (c.mapping_names && c.mapping_names.length)
+            ? c.mapping_names.map(deptBadge).join(' ')
+            : `<span class="text-muted small fst-italic">None</span>`;
+        const isActiveCls = c.is_active ? 'bg-success' : 'bg-secondary bg-opacity-75';
+        const toggleBtn   = c.is_active
+            ? `<button class="btn btn-icon btn-outline-warning" title="Deactivate" onclick="toggleCategory(${c.id}, false)"><i class="bi bi-pause-fill"></i></button>`
+            : `<button class="btn btn-icon btn-outline-success" title="Activate"   onclick="toggleCategory(${c.id}, true)"><i class="bi bi-play-fill"></i></button>`;
+
+        return `
+        <tr>
+            <td class="ps-4">
+                <div class="d-flex align-items-center">
+                    ${swatch}
+                    <div>
+                        <div class="fw-semibold">${escapeHtml(c.icon || '')} ${escapeHtml(c.name || '')}</div>
+                        <div class="small text-muted">${escapeHtml(c.description || '')}</div>
+                    </div>
+                </div>
+            </td>
+            <td>${sevBadge(c.default_severity)}</td>
+            <td class="text-center"><span class="priority-pill">${c.priority_order ?? 0}</span></td>
+            <td>${mappingBadges}</td>
+            <td><span class="badge ${isActiveCls}">${c.is_active ? 'Active' : 'Inactive'}</span></td>
+            <td class="text-end pe-4">
+                <div class="d-inline-flex gap-1">
+                    <button class="btn btn-icon btn-outline-primary"  title="Edit"     onclick="openEditModal(${c.id})"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-icon btn-outline-info"     title="Mappings" onclick="openMappingsModal(${c.id}, '${escapeHtml(c.name || '')}')"><i class="bi bi-diagram-3"></i></button>
+                    ${toggleBtn}
+                    <button class="btn btn-icon btn-outline-danger"   title="Delete"   onclick="deleteCategory(${c.id})"><i class="bi bi-trash"></i></button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function resetFilters() {
+    document.getElementById('category-search').value = '';
+    document.getElementById('severity-filter').value = '';
+    document.getElementById('status-filter').value   = '';
+    renderCategories();
+}
+
 function populateDepartmentTypeSelect() {
     const select = document.getElementById('mapping-department-type');
     if (!select) return;
-    select.innerHTML = departmentTypeChoices.map(type => `
-        <option value="${type}">${type}${departmentTypeDescriptions[type] ? ` - ${departmentTypeDescriptions[type]}` : ''}</option>
-    `).join('');
+    select.innerHTML = departmentTypeChoices.map(type => {
+        const desc = departmentTypeDescriptions[type] ? ` — ${departmentTypeDescriptions[type]}` : '';
+        const ico  = DEPT_ICON[type] || '';
+        return `<option value="${type}">${ico} ${type}${desc}</option>`;
+    }).join('');
 }
 
-function openCreateModal() {
-    document.getElementById('category-modal-title').textContent = 'Add Category';
-    document.getElementById('category-id').value = '';
-    document.getElementById('category-name').value = '';
-    document.getElementById('category-description').value = '';
-    document.getElementById('category-icon').value = '';
-    document.getElementById('category-default-severity').value = 'MEDIUM';
-    document.getElementById('category-color').value = '';
-    document.getElementById('category-priority-order').value = '0';
-    document.getElementById('category-is-active').checked = true;
-    categoryModal.show();
-}
+// ── Mappings modal ────────────────────────────────────────────────────────────
 
 async function openMappingsModal(categoryId, categoryName) {
     currentMappingCategoryId = categoryId;
-    document.getElementById('mapping-modal-title').textContent = `Category Mappings - ${categoryName}`;
+    document.getElementById('mapping-modal-title').textContent = `${categoryName} — Department Mappings`;
     resetMappingForm();
     await loadMappings(categoryId);
     mappingModal.show();
@@ -335,51 +450,59 @@ async function loadMappings(categoryId) {
     try {
         const data = await apiRequest(`${CATEGORIES_API}${categoryId}/mappings/`);
         currentMappings = data.mappings || [];
-        renderMappingsTable();
+        renderMappingsCards();
     } catch (error) {
         currentMappings = [];
-        document.getElementById('mappings-tbody').innerHTML = `
-            <tr><td colspan="4" class="text-center py-4 text-danger">Failed to load mappings</td></tr>
-        `;
+        document.getElementById('mappings-cards').innerHTML =
+            `<p class="text-center text-danger py-3">Failed to load mappings</p>`;
         showToast(error.message || 'Failed to load mappings', 'error');
     }
 }
 
-function renderMappingsTable() {
-    const tbody = document.getElementById('mappings-tbody');
+function renderMappingsCards() {
+    const empty = document.getElementById('mappings-empty');
+    const cards = document.getElementById('mappings-cards');
     if (!currentMappings.length) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-muted">No mappings yet</td></tr>`;
+        empty.style.display = '';
+        cards.innerHTML = '';
         return;
     }
-
-    tbody.innerHTML = currentMappings.map(m => `
-        <tr>
-            <td><span class="fw-semibold">${m.department_type}</span></td>
-            <td>${m.priority ?? 1}</td>
-            <td>
-                <span class="badge ${m.is_required ? 'bg-success' : 'bg-secondary'}">
-                    ${m.is_required ? 'Yes' : 'No'}
-                </span>
-            </td>
-            <td class="text-end">
-                <button class="btn btn-sm btn-outline-primary me-1" onclick="editMapping(${m.id})">Edit</button>
-                <button class="btn btn-sm btn-outline-danger" onclick="deleteMapping(${m.id})">Delete</button>
-            </td>
-        </tr>
-    `).join('');
+    empty.style.display = 'none';
+    cards.innerHTML = currentMappings.map(m => {
+        const ico       = DEPT_ICON[m.department_type] || '🏢';
+        const deptCls   = `dept-${m.department_type}`;
+        const reqBadge  = m.is_required
+            ? `<span class="badge bg-success bg-opacity-75">Required</span>`
+            : `<span class="badge bg-secondary bg-opacity-50">Optional</span>`;
+        return `
+        <div class="d-flex align-items-center justify-content-between px-3 py-2 mb-2 rounded-3 border" style="background:var(--sa-surface)">
+            <div class="d-flex align-items-center gap-3">
+                <span class="dept-badge ${deptCls} fs-6 px-3 py-1">${ico} ${escapeHtml(m.department_type)}</span>
+                <div>
+                    <div class="small text-muted">Dispatch order</div>
+                    <strong>#${m.priority ?? 1}</strong>
+                </div>
+                ${reqBadge}
+            </div>
+            <div class="d-flex gap-1">
+                <button class="btn btn-icon btn-outline-primary"  title="Edit"   onclick="editMapping(${m.id})"><i class="bi bi-pencil"></i></button>
+                <button class="btn btn-icon btn-outline-danger"   title="Delete" onclick="deleteMapping(${m.id})"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>`;
+    }).join('');
 }
 
 function editMapping(mappingId) {
     const mapping = currentMappings.find(m => m.id === mappingId);
     if (!mapping) return;
-
     document.getElementById('mapping-id').value = mapping.id;
     document.getElementById('mapping-department-type').value = mapping.department_type;
     document.getElementById('mapping-department-type').disabled = true;
     document.getElementById('mapping-priority').value = mapping.priority ?? 1;
     document.getElementById('mapping-is-required').checked = !!mapping.is_required;
-    document.getElementById('btn-save-mapping').textContent = 'Update';
-    document.getElementById('btn-cancel-mapping-edit').style.display = 'inline-block';
+    document.getElementById('btn-save-mapping-label').textContent = 'Update';
+    document.getElementById('mapping-form-label').textContent = 'Edit Mapping';
+    document.getElementById('mapping-cancel-row').style.display = '';
 }
 
 function resetMappingForm() {
@@ -390,37 +513,28 @@ function resetMappingForm() {
     }
     document.getElementById('mapping-priority').value = '1';
     document.getElementById('mapping-is-required').checked = true;
-    document.getElementById('btn-save-mapping').textContent = 'Add';
-    document.getElementById('btn-cancel-mapping-edit').style.display = 'none';
+    document.getElementById('btn-save-mapping-label').textContent = 'Add';
+    document.getElementById('mapping-form-label').textContent = 'Add Mapping';
+    document.getElementById('mapping-cancel-row').style.display = 'none';
 }
 
 async function saveMapping() {
     if (!currentMappingCategoryId) return;
-
     const mappingId = document.getElementById('mapping-id').value;
     const payload = {
-        priority: parseInt(document.getElementById('mapping-priority').value || '1', 10),
+        priority:    parseInt(document.getElementById('mapping-priority').value || '1', 10),
         is_required: document.getElementById('mapping-is-required').checked
     };
-
-    if (!mappingId) {
-        payload.department_type = document.getElementById('mapping-department-type').value;
-    }
+    if (!mappingId) payload.department_type = document.getElementById('mapping-department-type').value;
 
     try {
         showLoader();
         if (mappingId) {
-            await apiRequest(`${CATEGORIES_API}${currentMappingCategoryId}/mappings/${mappingId}/`, {
-                method: 'PATCH',
-                body: JSON.stringify(payload)
-            });
+            await apiRequest(`${CATEGORIES_API}${currentMappingCategoryId}/mappings/${mappingId}/`, { method:'PATCH', body:JSON.stringify(payload) });
             showToast('Mapping updated', 'success');
         } else {
-            await apiRequest(`${CATEGORIES_API}${currentMappingCategoryId}/mappings/`, {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-            showToast('Mapping created', 'success');
+            await apiRequest(`${CATEGORIES_API}${currentMappingCategoryId}/mappings/`, { method:'POST', body:JSON.stringify(payload) });
+            showToast('Mapping added', 'success');
         }
         resetMappingForm();
         await loadMappings(currentMappingCategoryId);
@@ -433,10 +547,10 @@ async function saveMapping() {
 }
 
 async function deleteMapping(mappingId) {
-    if (!confirm('Delete this mapping?')) return;
+    if (!confirm('Remove this department mapping?')) return;
     try {
-        await apiRequest(`${CATEGORIES_API}mappings/${mappingId}/`, { method: 'DELETE' });
-        showToast('Mapping deleted', 'success');
+        await apiRequest(`${CATEGORIES_API}mappings/${mappingId}/`, { method:'DELETE' });
+        showToast('Mapping removed', 'success');
         await loadMappings(currentMappingCategoryId);
         await loadCategories();
     } catch (error) {
@@ -444,18 +558,37 @@ async function deleteMapping(mappingId) {
     }
 }
 
+// ── Category modal ────────────────────────────────────────────────────────────
+
+function openCreateModal() {
+    document.getElementById('category-modal-title').textContent = 'Add Category';
+    document.getElementById('category-id').value = '';
+    document.getElementById('category-name').value = '';
+    document.getElementById('category-description').value = '';
+    document.getElementById('category-icon').value = '';
+    document.getElementById('category-default-severity').value = 'MEDIUM';
+    document.getElementById('category-color').value = '';
+    document.getElementById('category-color-picker').value = '#2563eb';
+    document.getElementById('category-priority-order').value = '0';
+    document.getElementById('category-is-active').checked = true;
+    categoryModal.show();
+}
+
 async function openEditModal(categoryId) {
     try {
-        const category = await apiRequest(`${CATEGORIES_API}${categoryId}/`);
+        const c = await apiRequest(`${CATEGORIES_API}${categoryId}/`);
         document.getElementById('category-modal-title').textContent = 'Edit Category';
-        document.getElementById('category-id').value = category.id;
-        document.getElementById('category-name').value = category.name || '';
-        document.getElementById('category-description').value = category.description || '';
-        document.getElementById('category-icon').value = category.icon || '';
-        document.getElementById('category-default-severity').value = category.default_severity || 'MEDIUM';
-        document.getElementById('category-color').value = category.color || '';
-        document.getElementById('category-priority-order').value = category.priority_order ?? 0;
-        document.getElementById('category-is-active').checked = !!category.is_active;
+        document.getElementById('category-id').value = c.id;
+        document.getElementById('category-name').value = c.name || '';
+        document.getElementById('category-description').value = c.description || '';
+        document.getElementById('category-icon').value = c.icon || '';
+        document.getElementById('category-default-severity').value = c.default_severity || 'MEDIUM';
+        document.getElementById('category-color').value = c.color || '';
+        if (c.color && /^#[0-9a-fA-F]{6}$/.test(c.color)) {
+            document.getElementById('category-color-picker').value = c.color;
+        }
+        document.getElementById('category-priority-order').value = c.priority_order ?? 0;
+        document.getElementById('category-is-active').checked = !!c.is_active;
         categoryModal.show();
     } catch (error) {
         showToast(error.message || 'Failed to load category', 'error');
@@ -465,33 +598,23 @@ async function openEditModal(categoryId) {
 async function saveCategory() {
     const id = document.getElementById('category-id').value;
     const payload = {
-        name: document.getElementById('category-name').value.trim(),
-        description: document.getElementById('category-description').value.trim(),
-        icon: document.getElementById('category-icon').value.trim(),
+        name:             document.getElementById('category-name').value.trim(),
+        description:      document.getElementById('category-description').value.trim(),
+        icon:             document.getElementById('category-icon').value.trim(),
         default_severity: document.getElementById('category-default-severity').value,
-        color: document.getElementById('category-color').value.trim(),
-        priority_order: parseInt(document.getElementById('category-priority-order').value || '0', 10),
-        is_active: document.getElementById('category-is-active').checked
+        color:            document.getElementById('category-color').value.trim(),
+        priority_order:   parseInt(document.getElementById('category-priority-order').value || '0', 10),
+        is_active:        document.getElementById('category-is-active').checked
     };
-
-    if (!payload.name) {
-        showToast('Category name is required', 'error');
-        return;
-    }
+    if (!payload.name) { showToast('Category name is required', 'error'); return; }
 
     try {
         showLoader();
         if (id) {
-            await apiRequest(`${CATEGORIES_API}${id}/`, {
-                method: 'PATCH',
-                body: JSON.stringify(payload)
-            });
+            await apiRequest(`${CATEGORIES_API}${id}/`, { method:'PATCH', body:JSON.stringify(payload) });
             showToast('Category updated', 'success');
         } else {
-            await apiRequest(CATEGORIES_API, {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
+            await apiRequest(CATEGORIES_API, { method:'POST', body:JSON.stringify(payload) });
             showToast('Category created', 'success');
         }
         categoryModal.hide();
@@ -505,10 +628,7 @@ async function saveCategory() {
 
 async function toggleCategory(categoryId, isActive) {
     try {
-        await apiRequest(`${CATEGORIES_API}${categoryId}/`, {
-            method: 'PATCH',
-            body: JSON.stringify({ is_active: isActive })
-        });
+        await apiRequest(`${CATEGORIES_API}${categoryId}/`, { method:'PATCH', body:JSON.stringify({ is_active: isActive }) });
         showToast(isActive ? 'Category activated' : 'Category deactivated', 'success');
         await loadCategories();
     } catch (error) {
@@ -517,9 +637,9 @@ async function toggleCategory(categoryId, isActive) {
 }
 
 async function deleteCategory(categoryId) {
-    if (!confirm('Delete this category? If it has incidents, it will be deactivated instead.')) return;
+    if (!confirm('Delete this category? If it has incidents it will be deactivated instead.')) return;
     try {
-        await apiRequest(`${CATEGORIES_API}${categoryId}/`, { method: 'DELETE' });
+        await apiRequest(`${CATEGORIES_API}${categoryId}/`, { method:'DELETE' });
         showToast('Category deleted/deactivated', 'success');
         await loadCategories();
     } catch (error) {

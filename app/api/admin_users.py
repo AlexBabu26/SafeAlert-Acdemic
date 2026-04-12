@@ -315,6 +315,14 @@ def list_pending_users(user):
     }), 200
 
 
+@bp.route('/departments/', methods=['GET'])
+@admin_required
+def list_departments(user):
+    """List all departments for admin filtering"""
+    departments = Department.query.filter_by(is_active=True).order_by(Department.name).all()
+    return jsonify([{'id': d.id, 'name': d.name} for d in departments]), 200
+
+
 @bp.route('/bulk-activate/', methods=['POST'])
 @admin_required
 def bulk_activate(user):

@@ -257,15 +257,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const incidentId = response?.incident?.id;
             const trackingCode = response?.tracking_code;
 
-            showToast(response?.message || 'Emergency report submitted.', 'success');
-            if (incidentId && isAuthenticated()) {
-                setTimeout(() => {
-                    window.location.href = `/reports/${incidentId}`;
-                }, 600);
-            } else if (trackingCode) {
-                setTimeout(() => {
-                    window.location.href = `/track?code=${encodeURIComponent(trackingCode)}`;
-                }, 600);
+            if (trackingCode) {
+                showToast(`Report submitted! Save your tracking code: ${trackingCode}`, 'success', 12000);
+            } else {
+                showToast(response?.message || 'Emergency report submitted.', 'success');
             }
         } catch (error) {
             showToast(error.message || 'Failed to submit quick report.', 'error');

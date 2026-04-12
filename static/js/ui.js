@@ -1,6 +1,6 @@
 // UI utility functions
 
-function showToast(message, type = 'info') {
+function showToast(message, type = 'info', delay = 5000) {
     const toast = document.getElementById('toast');
     const toastBody = document.getElementById('toast-body');
     const toastTitle = document.getElementById('toast-title');
@@ -17,7 +17,7 @@ function showToast(message, type = 'info') {
     toastTitle.className = `me-auto ${config.class}`;
     toastBody.textContent = message;
     
-    const bsToast = new bootstrap.Toast(toast);
+    const bsToast = bootstrap.Toast.getOrCreateInstance(toast, { delay });
     bsToast.show();
 }
 

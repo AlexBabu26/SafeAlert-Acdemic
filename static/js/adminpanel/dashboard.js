@@ -37,7 +37,8 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const categories = await apiGet(API_ENDPOINTS.categories);
             const select = document.getElementById('filter-category');
-            categories.results.forEach(cat => {
+            const categoryList = Array.isArray(categories) ? categories : categories.results;
+            categoryList.forEach(cat => {
                 const option = document.createElement('option');
                 option.value = cat.id;
                 option.textContent = cat.name;

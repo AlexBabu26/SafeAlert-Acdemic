@@ -248,9 +248,7 @@
                 <h1 class="h3 mb-1">User Management</h1>
                 <p class="mb-0 opacity-75">Manage all users, responders, and dispatchers</p>
             </div>
-            <button class="btn btn-light" onclick="showAddUserModal()">
-                <i class="bi bi-plus-lg"></i> Add User
-            </button>
+
         </div>
     </div>
 </div>
@@ -424,14 +422,14 @@ function loadStats() {
 }
 
 function loadDepartments() {
-    apiRequest('/api/dispatcher/departments/')
+    apiRequest('/api/admin/users/departments/')
         .then(data => {
             departments = data;
             const select = document.getElementById('filter-department');
             data.forEach(dept => {
                 const option = document.createElement('option');
                 option.value = dept.id;
-                option.textContent = `${dept.name} (${dept.type})`;
+                option.textContent = dept.name;
                 select.appendChild(option);
             });
         })
