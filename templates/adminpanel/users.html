@@ -625,6 +625,9 @@ function viewUser(userId) {
                                     `<option value="${d.id}" ${user.department_id === d.id ? 'selected' : ''}>${d.name}</option>`
                                 ).join('')}
                             </select>
+                            <div id="dept-required-warning" class="text-danger small mt-1" style="display:none">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i>A department must be assigned when the Department role is enabled.
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small">Badge Number</label>
@@ -646,21 +649,53 @@ function viewUser(userId) {
         });
 }
 
+// Show warning in real-time when Department role toggled without a department selected
+document.addEventListener('change', function(e) {
+    if (e.target && e.target.id === 'edit-is-department') {
+        checkDeptWarning();
+    }
+    if (e.target && e.target.id === 'edit-department') {
+        checkDeptWarning();
+    }
+});
+
+function checkDeptWarning() {
+    const isDept    = document.getElementById('edit-is-department')?.checked;
+    const deptVal   = document.getElementById('edit-department')?.value;
+    const warning   = document.getElementById('dept-required-warning');
+    const deptSelect = document.getElementById('edit-department');
+    if (!warning || !deptSelect) return;
+    const show = isDept && !deptVal;
+    warning.style.display   = show ? '' : 'none';
+    deptSelect.classList.toggle('is-invalid', show);
+}
+
 function saveUserChanges() {
     if (!currentUserId) return;
 
-    const badgeNumber = document.getElementById('edit-badge').value;
+    const badgeNumber   = document.getElementById('edit-badge').value;
+    const isDepartment  = document.getElementById('edit-is-department').checked;
+    const departmentId  = document.getElementById('edit-department').value;
+
     if (badgeNumber && badgeNumber.length > 50) {
         showToast('Badge number must not exceed 50 characters.', 'error');
+        return;
+    }
+
+    // A department user must have a department assigned
+    if (isDepartment && !departmentId) {
+        checkDeptWarning();
+        showToast('Please assign a department before saving a Department role user.', 'error');
+        document.getElementById('edit-department').focus();
         return;
     }
 
     const data = {
         is_active: document.getElementById('edit-is-active').value === 'true',
         is_staff: document.getElementById('edit-is-staff').checked,
-        is_department: document.getElementById('edit-is-department').checked,
+        is_department: isDepartment,
         is_responder: document.getElementById('edit-is-responder').checked,
-        department_id: document.getElementById('edit-department').value || null,
+        department_id: departmentId || null,
         badge_number: document.getElementById('edit-badge').value || null
     };
     
