@@ -331,11 +331,11 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="first_name" class="form-label">First Name</label>
-                                <input type="text" class="form-control" id="first_name">
+                                <input type="text" class="form-control" id="first_name" maxlength="50" placeholder="e.g. James">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="last_name" class="form-label">Last Name</label>
-                                <input type="text" class="form-control" id="last_name">
+                                <input type="text" class="form-control" id="last_name" maxlength="50" placeholder="e.g. Smith">
                             </div>
                         </div>
                         <div class="mb-3">
@@ -623,11 +623,23 @@ document.getElementById('register-form').addEventListener('submit', async functi
     const role = document.getElementById('role').value;
     const username = document.getElementById('username').value;
     const email = document.getElementById('email').value;
+    const firstName = document.getElementById('first_name').value.trim();
+    const lastName  = document.getElementById('last_name').value.trim();
     const phoneNumber = document.getElementById('phone_number').value.trim();
     const password = document.getElementById('password').value;
     const password2 = document.getElementById('password2').value;
-    
-    // Basic validation
+
+    // ── Name validation ──
+    const nameRegex = /^[^\d!@#$%^&*()_+=\[\]{};':"\\|,.<>\/?`~]*$/;
+    if (firstName && (/\d/.test(firstName) || !nameRegex.test(firstName))) {
+        showToast('First name must not contain numbers or special characters.', 'error');
+        return;
+    }
+    if (lastName && (/\d/.test(lastName) || !nameRegex.test(lastName))) {
+        showToast('Last name must not contain numbers or special characters.', 'error');
+        return;
+    }
+
     // ── Password strength (mirrors backend rules) ──
     if (password.length < 8) {
         showToast('Password must be at least 8 characters.', 'error');

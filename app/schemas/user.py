@@ -1,16 +1,31 @@
 """
 User schemas for SafeAlert
 """
+import re
 from marshmallow import Schema, fields, validate, ValidationError, validates, validates_schema
 from app.utils.validators import validate_phone_number, validate_password_strength
+
+# Allows letters (including accented/unicode), spaces, hyphens, apostrophes
+_NAME_RE = re.compile(r"^[\w'\- ]+$", re.UNICODE)
+
+def validate_name(value: str) -> None:
+    """Reject names that contain digits or special characters."""
+    if not value or not value.strip():
+        return  # optional field — blank is fine
+    if any(c.isdigit() for c in value):
+        raise ValidationError('Name must not contain numbers.')
+    if not _NAME_RE.match(value.strip()):
+        raise ValidationError('Name may only contain letters, spaces, hyphens, and apostrophes.')
 
 
 class UserRegistrationSchema(Schema):
     """Schema for user registration"""
     username    = fields.Str(required=True, validate=validate.Length(min=3, max=150))
     email       = fields.Email(required=False, allow_none=True)
-    first_name  = fields.Str(required=False, allow_none=True, load_default='')
-    last_name   = fields.Str(required=False, allow_none=True, load_default='')
+    first_name  = fields.Str(required=False, allow_none=True, load_default='',
+                             validate=[validate.Length(max=50), validate_name])
+    last_name   = fields.Str(required=False, allow_none=True, load_default='',
+                             validate=[validate.Length(max=50), validate_name])
     phone_number = fields.Str(required=False, allow_none=True)
     password    = fields.Str(required=True, validate=validate.Length(min=8), load_only=True)
     password2   = fields.Str(required=True, load_only=True)
