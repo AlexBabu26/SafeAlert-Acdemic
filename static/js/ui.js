@@ -1,5 +1,8 @@
 // UI utility functions
 
+/** Display timezone for all client-side date formatting (Chennai / India Standard Time). */
+const APP_DISPLAY_TIMEZONE = 'Asia/Kolkata';
+
 function showToast(message, type = 'info', delay = 5000) {
     const toast = document.getElementById('toast');
     const toastBody = document.getElementById('toast-body');
@@ -30,8 +33,44 @@ function hideLoader() {
 }
 
 function formatDate(dateString) {
+    if (dateString == null || dateString === '') return '-';
     const date = new Date(dateString);
-    return date.toLocaleString();
+    if (Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleString('en-IN', {
+        timeZone: APP_DISPLAY_TIMEZONE,
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+    });
+}
+
+/** Calendar date only (e.g. joined date) in APP_DISPLAY_TIMEZONE. */
+function formatDateOnly(dateString) {
+    if (dateString == null || dateString === '') return '-';
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleDateString('en-IN', {
+        timeZone: APP_DISPLAY_TIMEZONE,
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+    });
+}
+
+/** Time of day only in APP_DISPLAY_TIMEZONE. */
+function formatTimeOnly(dateString) {
+    if (dateString == null || dateString === '') return '-';
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleTimeString('en-IN', {
+        timeZone: APP_DISPLAY_TIMEZONE,
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+    });
 }
 
 function formatStatus(status) {
@@ -48,4 +87,3 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
-

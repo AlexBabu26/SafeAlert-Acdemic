@@ -476,7 +476,12 @@ function formatTime(isoString) {
     
     if (diff < 60) return `${Math.round(diff)}m ago`;
     if (diff < 1440) return `${Math.round(diff / 60)}h ago`;
-    return date.toLocaleDateString();
+    return date.toLocaleDateString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+    });
 }
 
 function initSocketIO() {

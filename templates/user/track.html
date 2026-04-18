@@ -232,8 +232,8 @@ function showResult(data) {
     
     document.getElementById('result-category').textContent = data.category || '-';
     document.getElementById('result-severity').textContent = data.severity;
-    document.getElementById('result-created').textContent = new Date(data.created_at).toLocaleString();
-    document.getElementById('result-updated').textContent = new Date(data.updated_at).toLocaleString();
+    document.getElementById('result-created').textContent = formatDate(data.created_at);
+    document.getElementById('result-updated').textContent = formatDate(data.updated_at);
     
     document.getElementById('result-card').classList.add('show');
 }

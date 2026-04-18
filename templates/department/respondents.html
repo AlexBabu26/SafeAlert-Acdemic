@@ -429,7 +429,7 @@ function renderRespondentCard(resp, isPending) {
                 ${resp.email ? `<dt>Email</dt><dd>${resp.email}</dd>` : ''}
                 ${resp.phone_number ? `<dt>Phone</dt><dd>${resp.phone_number}</dd>` : ''}
                 ${resp.badge_number ? `<dt>Badge</dt><dd>${resp.badge_number}</dd>` : ''}
-                <dt>Joined</dt><dd>${new Date(resp.date_joined).toLocaleDateString()}</dd>
+                <dt>Joined</dt><dd>${formatDateOnly(resp.date_joined)}</dd>
             </dl>
             
             <div class="respondent-actions">

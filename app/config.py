@@ -44,6 +44,6 @@ class Config:
     # Pagination
     PAGINATION_PER_PAGE = 20
     
-    # Timezone
-    TIMEZONE = 'UTC'
+    # Timezone (display / app default; DB may still store UTC)
+    TIMEZONE = 'Asia/Kolkata'
 

@@ -920,7 +920,7 @@ function renderDetailPanel(incident) {
                 <dt>Category</dt>
                 <dd>${incident.category_name}</dd>
                 <dt>Reported</dt>
-                <dd>${new Date(incident.created_at).toLocaleString()}</dd>
+                <dd>${formatDate(incident.created_at)}</dd>
                 <dt>Reporter</dt>
                 <dd>${incident.user_username || '<em>Anonymous</em>'}</dd>
             </dl>
@@ -1281,7 +1281,12 @@ function formatTime(isoString) {
     
     if (diff < 60) return `${Math.round(diff)}m ago`;
     if (diff < 1440) return `${Math.round(diff / 60)}h ago`;
-    return date.toLocaleDateString();
+    return date.toLocaleDateString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+    });
 }
 
 function initSocketIO() {

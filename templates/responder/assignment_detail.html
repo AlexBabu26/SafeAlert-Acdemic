@@ -399,7 +399,7 @@ function renderAssignment(data) {
     // Assignment info
     document.getElementById('priority-rank').textContent = `#${data.priority_rank}`;
     document.getElementById('distance').textContent = data.distance_km ? `${data.distance_km.toFixed(1)} km` : '-';
-    document.getElementById('assigned-at').textContent = new Date(data.assigned_at).toLocaleString();
+    document.getElementById('assigned-at').textContent = formatDate(data.assigned_at);
     document.getElementById('response-time').textContent = data.response_time_minutes ? 
         `${data.response_time_minutes.toFixed(1)} minutes` : '-';
     
@@ -493,7 +493,7 @@ function renderTimeline(data) {
         return `
             <div class="${className}">
                 <strong>${status.label}</strong>
-                ${status.time ? `<div class="text-muted small">${new Date(status.time).toLocaleString()}</div>` : ''}
+                ${status.time ? `<div class="text-muted small">${formatDate(status.time)}</div>` : ''}
             </div>
         `;
     }).join('');
@@ -560,7 +560,7 @@ function renderMessages(messages) {
     container.innerHTML = messages.map(msg => `
         <div class="chat-message ${msg.sender == currentUserId ? 'sent' : ''}">
             <div class="bubble">${msg.message}</div>
-            <div class="meta">${msg.sender_username} • ${new Date(msg.created_at).toLocaleTimeString()}</div>
+            <div class="meta">${msg.sender_username} • ${formatTimeOnly(msg.created_at)}</div>
         </div>
     `).join('');
     

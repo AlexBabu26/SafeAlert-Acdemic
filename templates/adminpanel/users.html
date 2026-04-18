@@ -489,8 +489,8 @@ function renderUsersTable(users) {
                 ${user.department_id ? getDepartmentName(user.department_id) : '<span class="text-muted">-</span>'}
             </td>
             <td>
-                <div class="small">${formatDate(user.date_joined)}</div>
-                ${user.last_login ? `<div class="small text-muted">Last: ${formatDate(user.last_login)}</div>` : ''}
+                <div class="small">${formatDateOnly(user.date_joined)}</div>
+                ${user.last_login ? `<div class="small text-muted">Last: ${formatDateOnly(user.last_login)}</div>` : ''}
             </td>
             <td>
                 <div class="status-toggle ${user.is_active ? 'active' : ''}" 
@@ -637,8 +637,8 @@ function viewUser(userId) {
                 </div>
                 <hr>
                 <div class="row text-muted small">
-                    <div class="col">Joined: ${formatDate(user.date_joined)}</div>
-                    <div class="col">Last Login: ${user.last_login ? formatDate(user.last_login) : 'Never'}</div>
+                    <div class="col">Joined: ${formatDateOnly(user.date_joined)}</div>
+                    <div class="col">Last Login: ${user.last_login ? formatDateOnly(user.last_login) : 'Never'}</div>
                 </div>
             `;
             
@@ -749,13 +749,6 @@ function getRoleClass(user) {
 function getDepartmentName(deptId) {
     const dept = departments.find(d => d.id === deptId);
     return dept ? dept.name : `Dept #${deptId}`;
-}
-
-function formatDate(dateStr) {
-    if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('en-US', {
-        year: 'numeric', month: 'short', day: 'numeric'
-    });
 }
 
 function showAddUserModal() {
