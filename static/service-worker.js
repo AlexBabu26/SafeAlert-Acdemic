@@ -3,7 +3,7 @@
  * Provides offline support and caching
  */
 
-const CACHE_NAME = 'safealert-v3';
+const CACHE_NAME = 'safealert-v4';
 const STATIC_ASSETS = [
     '/',
     '/login',
