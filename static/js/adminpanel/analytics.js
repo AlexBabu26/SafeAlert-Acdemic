@@ -1,11 +1,15 @@
 document.addEventListener('DOMContentLoaded', function() {
-    if (!requireAuth()) return;
+   if (!requireAuth()) return;
 
     const userInfo = getUserInfo();
     if (!userInfo || !userInfo.is_staff) {
         window.location.href = '/reports';
         return;
     }
+
+    let timeseriesChart = null;
+    let statusChart = null;
+    let categoryChart = null;
 
     loadSummary();
     loadTimeseries();
@@ -26,7 +30,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Status chart
             const statusCtx = document.getElementById('status-chart').getContext('2d');
-            new Chart(statusCtx, {
+            if (statusChart) statusChart.destroy();
+            statusChart = new Chart(statusCtx, {
                 type: 'doughnut',
                 data: {
                     labels: data.status_counts.map(s => s.status),
@@ -47,7 +52,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Category chart
             const categoryCtx = document.getElementById('category-chart').getContext('2d');
-            new Chart(categoryCtx, {
+            if (categoryChart) categoryChart.destroy();
+            categoryChart = new Chart(categoryCtx, {
                 type: 'bar',
                 data: {
                     labels: data.category_counts.map(c => c.name),
@@ -87,7 +93,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await apiGet(API_ENDPOINTS.admin.analytics.timeseries, { days });
 
             const timeseriesCtx = document.getElementById('timeseries-chart').getContext('2d');
-            new Chart(timeseriesCtx, {
+            if (timeseriesChart) timeseriesChart.destroy();
+            timeseriesChart = new Chart(timeseriesCtx, {
                 type: 'line',
                 data: {
                     labels: data.data.map(d => d.date),
